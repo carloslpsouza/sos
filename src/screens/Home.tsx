@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Alert } from 'react-native';
 import { HStack, IconButton, VStack, useTheme, Text, Heading, FlatList, Center, Input, Icon, Box } from 'native-base';
-import { SignOut, QrCode, House } from 'phosphor-react-native';
+import { SignOut, QrCode, House, AlignBottom } from 'phosphor-react-native';
 
 import firestore from '@react-native-firebase/firestore';
 
@@ -34,7 +34,6 @@ export function Home() {
 
     const navigation = useNavigation();
     const route = useRoute();
-
 
     const handleLogout = Out();
 
@@ -86,6 +85,7 @@ export function Home() {
     }
 
     function atualizaDados(idOco: string) {
+        
         //setIsLoading(true);
         firestore()
             .collection('OCORRENCIA')
@@ -117,7 +117,7 @@ export function Home() {
         }
         setVetorOcorrencias([data]);
         console.log(vetorOcorrencias);
-        
+
     });
     }
 
@@ -139,15 +139,14 @@ export function Home() {
                         onPress={handleLogout}
                     />
                 </HStack>
+                <HStack h='4/6'>
+                    <Text></Text>
+                </HStack>
 
-                <VStack flex={1} px={6}>
-                    <HStack space={3} mb={8}>
-                    </HStack>
-
-                    <Button title="Minhas ocorrências" mb={5} /* onPress={/* () => handleNewOrder(hospitalId) } */ />
-                    <Button title="Nova ocorrencia" mb={5} onPress={() => novaOcorrencia()} />
+                <VStack m={4}>
+                    <Button title="Minhas ocorrências" mb={10} /* onPress={/* () => handleNewOrder(hospitalId) } */ />
+                    <Button title="Nova ocorrencia" mb={10} onPress={() => novaOcorrencia()} />
                 </VStack>
-
             </VStack>
         );
     }//inicial
@@ -158,19 +157,23 @@ export function Home() {
                     <Logo />
                     <IconButton
                         icon={<SignOut size={26} color={colors.black} />}
-                        onPress={handleLogout}
-                    />
+                        onPress={handleLogout} />
                 </HStack>
 
-                <VStack flex={1} px={6} alignItems="center">
-                    <Heading fontSize={16} mt={5} color="#fff">
-                        EQUIPE OU VTR
-                    </Heading>
-                    <Icon as={<QrCode color="white" size={100} />} m={5} />
-                    <Input color={colors.white} placeholder="Equipe ou VTR" m={5} onChangeText={setVtr} />
-                    <Button title="Avançar" mb={5} w={'full'} onPress={() => navRegSaidaBase()} />
+                <VStack px={6} alignItems="center">
+                    <VStack m={0}>
+                        <Heading fontSize={16} mt={5} color="#fff">
+                            EQUIPE OU VTR
+                        </Heading>
+                    </VStack>
+                    <VStack m={0} h='3/6' space={4} >
+                        <Icon as={<QrCode color="white" size={100} />} m={5} />
+                    </VStack>
+                    <VStack m={0} w='full'>
+                        <Input color={colors.white} placeholder="Equipe ou VTR" m={5} onChangeText={setVtr} />
+                        <Button title="Avançar" onPress={() => navRegSaidaBase()} />
+                    </VStack>               
                 </VStack>
-
             </VStack>
         );
     }//insereVtr
@@ -181,14 +184,17 @@ export function Home() {
                     <Logo />
                     <IconButton
                         icon={<SignOut size={26} color={colors.black} />}
-                        onPress={handleLogout}
-                    />
+                        onPress={handleLogout}  />
                 </HStack>
-
-                <VStack flex={1} px={6} alignItems="center">
-                    <Heading fontSize={16} mt={5} color="#fff">
+                <VStack alignItems={'center'}>
+                     <Heading fontSize={16} mt={5} color="#fff" >
                         SAÍDA DA BASE: { vetorOcorrencias[0] ? vetorOcorrencias[0].vtr.toString().toUpperCase() : null }
                     </Heading>
+                </VStack>
+                <VStack m={0} space={4}  alignItems="center" h='4/6'>
+                    
+                </VStack>
+                <VStack px={6} alignItems="center">                    
                     <Button title="Registrar saída" mb={5} w={'full'} onPress={() => navInsChegLocal()} />
                 </VStack>
 
