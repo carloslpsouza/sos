@@ -10,6 +10,7 @@ import { dateFormat } from '../utils/firestoreDateFormats'
 
 import Logo from '../assets/Logo.svg';
 import { Button } from '../componentes/Button';
+import { Confirm } from '../componentes/Confirm';
 
 import { Loading } from '../componentes/Loading';
 import { Out } from '../utils/Out';
@@ -36,11 +37,10 @@ export function IncluiVitima() {
 
     const [vetorOcorrencias, setVetorOcorrencias] = useState<OcorrenciasType[]>([]);
     const [vetorVitimas, setVetorVitimas] = useState([]);
-    const [idSubDoc, setIdSubDoc] = useState('');
-    const [inicial, setInicial] = useState(true);
-    const [IncluiVitima, setIncluiVitima] = useState(false);
+    const [inicial, setInicial] = useState(false);
+    const [IncluiVitima, setIncluiVitima] = useState(true);
     const [chegadaLocal, setChegadaLocal] = useState(false);
-    const [ocultaDados, setOcDados] = useState(false);
+    const [ocultaDados, setOcDados] = useState(true);
 
     const [nmPaciente, setnmPaciente] = useState('');
     const [cpf, setCpf] = useState('');
@@ -49,16 +49,13 @@ export function IncluiVitima() {
     const [pressao, setPressao] = useState('');
     const [frequencia, setFrequencia] = useState('');
     const [saturacao, setSaturacao] = useState('');
-    const [risco, setRisco] = useState<Number>();
-    const [vitimaConsciente, setVitimaConsciente] = useState('');
+    const [risco, setRisco] = useState<Number>(1);
     const [observacoes, setObservacoes] = useState('');
     const [corRisco, setCorRisco] = useState('');
-
 
     const navigation = useNavigation();
     const route = useRoute();
     const { idOcorrencia } = route.params as RouteParams; // o route.params não sabe qual é então foi criada a tipagem acima
-
 
     const handleLogout = Out();
 
@@ -125,7 +122,7 @@ export function IncluiVitima() {
                 <VStack w={'full'}>
                     <IconButton
                         icon={<FirstAid color="white" size={50} />}
-                        onPress={exibeForm}
+                        onPress={ () => confirmVitima('Incluir Vítima?')}
                     />
                     <Button title="Registrar saída" mb={5} w={'full'} onPress={() => atualizaDados(idOcorrencia, "1")} />
                 </VStack>
@@ -179,6 +176,10 @@ export function IncluiVitima() {
                 <Button title="Registrar chegada" mb={5} w={'full'} onPress={() => navCheg()} />
             </VStack>
         )
+    }
+
+    function pagResOcorrencia(){
+        navigation.navigate('resumoOcorrencia', { idOcorrencia });
     }
 
     function navCheg() {
@@ -286,15 +287,7 @@ export function IncluiVitima() {
             </VStack>
         )
     }
-
-
-    function ocultaDadosPessoais() {
-        if (!nmPaciente || !cpf) {
-            return Alert.alert('Registrar', 'Verifique os campos e tente novamente');
-        }
-        setOcDados(true);
-    }
-
+ 
     function exibeDadosPessoais() {
 
         return (
@@ -334,53 +327,21 @@ export function IncluiVitima() {
     function atualizaDados(idOco: string, subdoc?: string) {
         const db = firestore().collection('OCORRENCIA')
         if (!vetorVitimas) {
-            return Alert.alert('VTR / Equipe', 'Verifique os campos e tente novamente');
+            return Alert.alert('Incluir Vítimas', 'Verifique os campos e tente novamente');
         }
-
-        const atualiza = db.doc(idOco)
-            .collection('VITIMAS')
-            .doc(idSubDoc)
+        db.doc(idOco)
             .update({
+                ts_saida_local: firestore.FieldValue.serverTimestamp(),
                 vitimas: vetorVitimas
             })
             .then(() => {
+                navigation.navigate('SelectHospital', { idOcorrencia });
                 getOcorrencia(idOcorrencia);
             })
             .catch((error) => {
-                console.log(error);
                 setIsLoading(false);
-                return Alert.alert('VTR / Equipe', 'Não foi possivel gravar o registro.');
+                return Alert.alert('Incluir Vítimas', 'Não foi possivel gravar o registro.');
             });
-
-        if (!atualiza) {
-            db.doc(idOco)
-                .collection('VITIMAS')
-                .add({
-                    ts: firestore.FieldValue.serverTimestamp()
-                })
-                .then((docRef) => { //docRef retorna LastInsertID
-                    console.log(docRef.id);
-                    setIdSubDoc(docRef.id);
-                })
-                .catch((error) => {
-                    console.log(error);
-                });
-            db.doc(idOco)
-                .collection('VITIMAS')
-                .doc(idSubDoc)
-                .update({
-                    vitimas: vetorVitimas
-                })
-                .then(() => {
-                    getOcorrencia(idOcorrencia);
-                })
-                .catch((error) => {
-                    console.log(error);
-                    setIsLoading(false);
-                    return Alert.alert('VTR / Equipe', 'Não foi possivel gravar o registro.');
-                });
-
-        }
         //setIsLoading(true);
     }
 
@@ -388,7 +349,7 @@ export function IncluiVitima() {
         const db = firestore();
         const docRef = db.collection('OCORRENCIA').doc(idOc);
         docRef.get().then((doc) => {
-            if (doc.exists) {
+            if (doc.data().exists) {
                 //console.log("Document data:", doc.data());
                 const data = {
                     id: idOc,
@@ -397,11 +358,11 @@ export function IncluiVitima() {
                     dt_chegada: dateFormat(doc.data().ts_chegada_local)
                 }
                 setVetorOcorrencias([data]);
-                console.log(vetorOcorrencias);
+                //console.log(vetorOcorrencias);
 
             } else {
                 // doc.data() will be undefined in this case
-                console.log("No such document!");
+                //console.log("getOcorrencia(): No such document!");
             }
         }).catch((error) => {
             console.log("Error getting document:", error);
@@ -422,8 +383,30 @@ export function IncluiVitima() {
         }
         vetorVitimas.push(objTemp);
         console.log(vetorVitimas);
-        setIncluiVitima(false);
-        setInicial(true);
+        confirmVitima('Incluir Vítima?');
+    }
+
+    const confirmVitima = (title: string, msg?: string) => {
+        return Alert.alert(
+          title,
+          msg,
+          [
+            {
+              text: "Sim",
+              onPress: () => {
+                pagVitima();
+                exibeForm();
+              }
+            },
+            {
+              text: "Não",
+              onPress: () => {
+                setIncluiVitima(false);
+                setInicial(true);
+              }
+            },
+          ]
+        );
     }
 
     useEffect(() => {
@@ -454,7 +437,6 @@ export function IncluiVitima() {
                     {IncluiVitima && pagVitima()}
                     {chegadaLocal && pagChegada()}
                 </VStack>
-
             </VStack>
         </>
 
