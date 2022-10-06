@@ -5,6 +5,7 @@ import { Ocorrencia } from '../screens/Ocorrencia';
 import { IncluiVitima } from '../screens/IncluiVitima';
 import { Details } from '../screens/Details';
 import { Register } from '../screens/Register';
+import { ResumoOcorrencia } from '../screens/ResumoOcorrencia';
 
 const { Navigator, Screen} =  createNativeStackNavigator();
 
@@ -14,6 +15,7 @@ export function AppRoutes(){
             <Screen name="home" component={Home} />
             <Screen name="ocorrencia" component={Ocorrencia} />
             <Screen name="incluiVitima" component={IncluiVitima} />
+            <Screen name="resumoOcorrencia" component={ResumoOcorrencia} />
             <Screen name="new" component={Register} />
             <Screen name="details" component={Details} />
             <Screen name="SelectHospital" component={SelectHospital} />            
