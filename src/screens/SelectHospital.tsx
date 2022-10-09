@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 
 import firestore from '@react-native-firebase/firestore';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { HStack, IconButton, VStack, useTheme, Text, Heading, FlatList, Center } from 'native-base';
 import { SignOut } from 'phosphor-react-native';
 import { ChatTeardropText } from 'phosphor-react-native';
@@ -14,21 +14,30 @@ import { Out } from '../utils/Out';
 
 type RouteParams = {
     hospitalId: string;
+    idOcorrencia: string;
 }
 
 export function SelectHospital() {
+    //Estilização & efeitos
     const [isLoading, setIsLoading] = useState(true);
     const { colors } = useTheme();
+
+    //Vetor de hospitais
     const [hospitais, setHospitais] = useState<HospitalProps[]>([]);
     const [qtdeRegistros, setQtderegistros] = useState(0);
     
-    const handleLogout = Out();
-
+    //Navegação entre páginas
     const navigation = useNavigation();
+    const route = useRoute(); 
+    //informações vindas de Incluivitima.tsx (Typagem logo após os imports Linha 15)
+    const { hospitalId, idOcorrencia } = route.params as RouteParams; // o route.params não sabe qual é então foi criada a tipagem acima
+
+    //Desloga do APP
+    const handleLogout = Out();
 
     function handleSetaHospital(hospitalId: string) {
         console.log(hospitalId);
-        navigation.navigate('home', { hospitalId })
+        navigation.navigate('new', { hospitalId, idOcorrencia })
     }
 
     useEffect(() => {
@@ -48,8 +57,8 @@ export function SelectHospital() {
             let temp = { ...dt, id: hospId, em_aberto }
             arrTempHsp.push(temp)
             //console.log(i);
-            i -= 1
-            if(i===0){
+            i -= 1 //decrementa 1 ate que todos os documentos tenham sido retornados
+            if(i===0){ //Só carrega o array quando todos os documentos foram carregados (Problemas de assincronismo)
                 setHospitais(arrTempHsp);
                 setIsLoading(false);
             }                        
@@ -61,7 +70,7 @@ export function SelectHospital() {
             .onSnapshot(snapshot => {
                 const data = snapshot.docs.map(doc => {
                     const { nm_hospital, latitude, longitude, bairro, cidade, lotacao } = doc.data();
-                    i += 1
+                    i += 1 //A cada elemento do documento incrementa 1 ate que tenha percorrido todos os docs (ver linha 60)
                     atendimentosPHospital(doc.id, doc.data(), i);
                     
                     return {
@@ -123,9 +132,6 @@ export function SelectHospital() {
                 }
 
             </VStack>
-
-
-
         </VStack>
     );
 }

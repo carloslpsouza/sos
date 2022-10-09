@@ -6,7 +6,7 @@ export declare global {
             incluiVitima: { idOcorrencia: String };
             resumoOcorrencia: {  idOcorrencia: String  };
             SelectHospital: {  idOcorrencia: String  };
-            new: { hospitalId: String };
+            new: { hospitalId: String, idOcorrencia?: string };
             details: { orderId: String, hospitalId: String };
         }
     }

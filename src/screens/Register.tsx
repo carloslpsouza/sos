@@ -1,6 +1,6 @@
-import { Alert, ScrollView } from 'react-native';
+import { Alert, Linking, Platform, ScrollView } from 'react-native';
 import React, { useEffect, useState } from 'react';
-import { Heading, HStack, IconButton, KeyboardAvoidingView, useTheme, VStack, Text, FormControl, Select } from 'native-base';
+import { Heading, HStack, IconButton, KeyboardAvoidingView, useTheme, VStack, Text, FormControl, Select, Center } from 'native-base';
 import { SignOut } from 'phosphor-react-native';
 import { useNavigation, useRoute } from '@react-navigation/native'
 import { Hourglass } from 'phosphor-react-native';
@@ -8,21 +8,39 @@ import { Input } from '../componentes/Input';
 import InputMask from "../componentes/InputMask";
 import { Button } from '../componentes/Button';
 import firestore from '@react-native-firebase/firestore';
+import Geolocation from '@react-native-community/geolocation';
+
 import Logo from '../assets/Logo.svg';
 import { especColors } from "../styles/especColors"
 import { Out } from '../utils/Out';
+import { Hospital, HospitalProps } from '../componentes/Hospital';
 
 type RouteParams = { // Essa tipagem foi criada apenas para que o auto complite pudesse achar esse paramentro (Testar sem)
     hospitalId: string; //Erro de tipo não pode ser und (Consultar navigation.d.ts)
+    idOcorrencia?: string;
 }
 
 export function Register() {
+    //Estilização & efeitos
     const [isLoading, setIsLoading] = useState(false);
+    const [ocultaDados, setOcDados] = useState(false);
+    const { colors } = useTheme();
 
+    //Vetor de vitimas vindo do banco
+    const [vetorVitimas, setVetorVitimas] = useState([]);
+
+    //Informações hospital
+    const [hospital, setHospital] = useState<HospitalProps>();
+    const [origem, setOrigem] = useState('');
+    const [destino, setDestino] = useState('');
+    const [tempo, setTempo] = useState(null);
+    const [distancia, setDistancia] = useState(null);
+
+    //Dados pessoais das vitimas para o documento PACIENTE
     const [nmPaciente, setnmPaciente] = useState('');
     const [cpf, setCpf] = useState('');
     const [telefone, setTelefone] = useState('');
-
+    //sinais vitais das vitimas para documento ATENDIMENTO
     const [pressao, setPressao] = useState('');
     const [frequencia, setFrequencia] = useState('');
     const [saturacao, setSaturacao] = useState('');
@@ -31,19 +49,16 @@ export function Register() {
     const [risco, setRisco] = useState<Number>();
     const [corRisco, setCorRisco] = useState('')
     const [status, setStatus] = useState('open');
-    const [ocultaDados, setOcDados] = useState(false);
 
+    //Navegação entre páginas
     const navigation = useNavigation();
     const route = useRoute();
-    const { hospitalId } = route.params as RouteParams; // o route.params não sabe qual é então foi criada a tipagem acima
+    //informações vindas de Incluivitima.tsx (Typagem logo após os imports Linha 15)
+    const { hospitalId, idOcorrencia } = route.params as RouteParams; // o route.params não sabe qual é então foi criada a tipagem acima
 
     const handleLogout = Out();
-    const { colors } = useTheme();
-    
+
     function sinaisVitais(idPaciente: string) {
-        if (!pressao || !frequencia || !saturacao || !temperatura) {
-            return Alert.alert('Registrar', 'Verifique os campos e tente novamente');
-        }
         setIsLoading(true);
         firestore()
             .collection('ATENDIMENTO')
@@ -92,6 +107,29 @@ export function Register() {
             });
     }
 
+    function getHospital() {
+        console.log("getHosp");
+
+        const db = firestore();
+        const docRef = db.collection('HOSPITAL').doc(hospitalId);
+        docRef.get().then((doc) => {
+            if (doc.exists) {
+                const data = doc.data() as HospitalProps
+                console.log(data);
+                setHospital(data);
+            } else {
+                // doc.data() will be undefined in this case
+                console.log("getHospital: HS Não encontrado");
+            }
+            setDestino('[' + [hospital.longitude, hospital.latitude] + ']')
+            //console.log(hospital.nm_hospital);
+        }).catch((error) => {
+            console.log("Error getHospital:", error);
+        });
+        //return false;
+    }
+
+
     async function handleNewOrderRegister() {
         dadosPessoais()
     }
@@ -129,21 +167,21 @@ export function Register() {
                     h={24}
                 />
                 <HStack space={4} justifyContent="space-between">
-                    <Select 
+                    <Select
                         selectedValue={String(risco)}
                         flex={1}
-                        minWidth="200" 
+                        minWidth="200"
                         accessibilityLabel="Grau de risco"
                         placeholder="Grau de risco"
                         fontSize={'lg'}
                         backgroundColor={corRisco}
                         _selectedItem={{
                             bg: corRisco,
-                            _text:{color:colors.white} 
+                            _text: { color: colors.white }
                         }}
                         _item={{
-                            _text:{color:colors.white}                            
-                        }} 
+                            _text: { color: colors.white }
+                        }}
                         mt={2}
                         h={20}
                         onValueChange={(itemValue) => setRisco(Number(itemValue))}>
@@ -152,7 +190,7 @@ export function Register() {
                         <Select.Item mt={2} backgroundColor={especColors.risco.urgencia} label="Urgência" value="3" />
                         <Select.Item mt={2} backgroundColor={especColors.risco.muitaUrgencia} label="Muita urgência" value="4" />
                         <Select.Item mt={2} fontWeight="bold" backgroundColor={especColors.risco.emergencia} label="Emergência" value="5" />
-                    </Select>                    
+                    </Select>
                 </HStack>
 
                 <Button
@@ -209,21 +247,79 @@ export function Register() {
 
     }
 
+
+    function infoGeo(org: string, dst: string) {
+        let request = new XMLHttpRequest();
+
+        request.open('POST', "https://api.openrouteservice.org/v2/directions/driving-car/json");
+
+        request.setRequestHeader('Accept', 'application/json, application/geo+json, application/gpx+xml, img/png; charset=utf-8');
+        request.setRequestHeader('Content-Type', 'application/json');
+        request.setRequestHeader('Authorization', '5b3ce3597851110001cf62485388f3fdaef64ec599ec37c1e19398ab');
+
+        request.onreadystatechange = function () {
+            if (this.readyState === 4) {
+                console.log('Status:', this.status);
+                let temp = this.responseText;
+                let temp1 = JSON.parse(temp);
+                console.log(temp1.routes[0].summary);
+                setDistancia((temp1.routes[0].summary.distance));
+                //setTempo(temp1.routes[0].summary.duration);
+                let tst = 600;
+                if(tst > 6000){
+                    setTempo({'temp': (temp1.routes[0].summary.duration)/60, 'tipo': 'horas'})
+                }else{
+                    setTempo({'temp': (temp1.routes[0].summary.duration)/60, 'tipo': 'min'})
+                }
+            }
+        };
+        const body = '{"coordinates":[' + [org, dst] + ']}';
+        //console.log(body);
+        request.send(body);
+    }
+
+    function openGps(lat?: string, lng?: string, purl?: string) {
+        var scheme = Platform.OS === 'ios' ? 'maps:' : 'geo:0,0?q=';
+        //var url = scheme + `${lat},${lng}`;
+        var url = scheme + `${purl}`;
+        Linking.openURL(url);
+        //console.log(infoGeo(origem.toString(), destino.toString()));
+    }
+
+    useEffect(() => {
+        Geolocation.getCurrentPosition(info => {
+            console.log(info.coords)
+            setOrigem('[' + [info.coords.longitude, info.coords.latitude] + ']')
+        });
+    }, []);
+
+    useEffect(() => {
+        getHospital();        
+    }, [origem]);
+
     useEffect(() => {
         exibeDadosPessoais();
         console.log(ocultaDados);
-        console.log(hospitalId);
-
-    }, [ocultaDados])
+        console.log("hs: " + hospitalId);
+        console.log("oc: " + idOcorrencia);
+    }, [ocultaDados]);
 
     useEffect(() => {
-        if(risco === 1){setCorRisco(especColors.risco.naoUrgencia)}
-        if(risco === 2){setCorRisco(especColors.risco.poucaUrgencia)}
-        if(risco === 3){setCorRisco(especColors.risco.urgencia)}
-        if(risco === 4){setCorRisco(especColors.risco.muitaUrgencia)}
-        if(risco === 5){setCorRisco(especColors.risco.emergencia)}
-        if(!risco){setCorRisco(colors.white)}
-    }, [risco])
+        if (risco === 1) { setCorRisco(especColors.risco.naoUrgencia) }
+        if (risco === 2) { setCorRisco(especColors.risco.poucaUrgencia) }
+        if (risco === 3) { setCorRisco(especColors.risco.urgencia) }
+        if (risco === 4) { setCorRisco(especColors.risco.muitaUrgencia) }
+        if (risco === 5) { setCorRisco(especColors.risco.emergencia) }
+        if (!risco) { setCorRisco(colors.white) }
+    }, [risco]);
+
+    useEffect(()=>{
+        console.log('org' + origem );
+        console.log('dst' + destino );
+        if(origem && destino){
+            infoGeo(origem.toString(), destino.toString())
+        }
+    },[origem, destino]);
 
     return (
         <KeyboardAvoidingView
@@ -257,12 +353,54 @@ export function Register() {
                         textTransform="uppercase"
                         color={colors.green[300]}
                     >
-                        Novo Paciente
+                        Conduzir para Hospital
                     </Text>
                 </HStack>
-
-                { ocultaDados ? exibeDadosTriagem() : exibeDadosPessoais() }
-
+                <VStack justifyContent="center" p={4}>
+                    <Heading justifyContent="center" >
+                        <Text
+                            fontSize="sm"
+                            ml={2}
+                            textTransform="uppercase"
+                            color={colors.white} >
+                            Confirma a condução das vitimas para o hospital abaixo?
+                        </Text>
+                    </Heading>
+                </VStack>
+                <VStack w='full' bg={'#000'} space={1} alignItems="center">
+                    <Heading>
+                        <Text
+                            textAlign='center'
+                            fontSize="sm"
+                            ml={2}
+                            textTransform="uppercase"
+                            color={colors.white} >
+                            {hospital ? hospital.nm_hospital : isLoading}
+                        </Text>
+                    </Heading>
+                    {
+                        hospital ?
+                            <>
+                                <Hospital dataHospital={hospital} w='full' />
+                                <Text color={colors.white}>Distância: {distancia ? (Number(distancia)/1000).toFixed(2) : isLoading} km</Text>
+                                <Text color={colors.white}>Tempo para chegada: {tempo ? (tempo.temp).toFixed(2) +" "+ tempo.tipo + "\n" : isLoading}</Text>
+                            </>
+                            :
+                            isLoading
+                    }
+                </VStack>
+                <VStack w='full' space={1}>
+                    <HStack
+                        w="full"
+                        justifyContent="space-between"
+                        alignItems="center"
+                        pt={1}
+                        pb={1}
+                        px={2}>
+                        <Button title='Não' m={1} w='2/5' />
+                        <Button title='Sim' m={1} w='2/5' onPress={() => { openGps(hospital.latitude, hospital.longitude, hospital.URL) }} />
+                    </HStack>
+                </VStack>
 
             </ScrollView>
         </KeyboardAvoidingView>

@@ -3,14 +3,13 @@ import { Alert } from 'react-native';
 
 import firestore from '@react-native-firebase/firestore';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { HStack, IconButton, VStack, useTheme, Text, Heading, FlatList, Center, Input, Icon, Box, Select, FormControl, Radio, ScrollView } from 'native-base';
+import { HStack, IconButton, VStack, useTheme, Text, Heading, FlatList, Center, Input, Icon, Box, Select, FormControl, Radio, ScrollView, AlertDialog } from 'native-base';
 import { SignOut, House, FirstAid, MapPinLine, PersonSimpleRun } from 'phosphor-react-native';
 
 import { dateFormat } from '../utils/firestoreDateFormats'
 
 import Logo from '../assets/Logo.svg';
 import { Button } from '../componentes/Button';
-import { Confirm } from '../componentes/Confirm';
 
 import { Loading } from '../componentes/Loading';
 import { Out } from '../utils/Out';
@@ -32,33 +31,42 @@ type OcorrenciasType = {
 }
 
 export function IncluiVitima() {
+    //Estilização
     const { colors } = useTheme();
     const [isLoading, setIsLoading] = useState(true);
 
     const [vetorOcorrencias, setVetorOcorrencias] = useState<OcorrenciasType[]>([]);
     const [vetorVitimas, setVetorVitimas] = useState([]);
+
+    //Controle de exibições dos componentes nesta tela
     const [inicial, setInicial] = useState(false);
     const [IncluiVitima, setIncluiVitima] = useState(true);
     const [chegadaLocal, setChegadaLocal] = useState(false);
     const [ocultaDados, setOcDados] = useState(true);
 
+    //dados pessoais das vitimas para vetorvitima
     const [nmPaciente, setnmPaciente] = useState('');
     const [cpf, setCpf] = useState('');
     const [telefone, setTelefone] = useState('');
 
+    //sinais vitais das vitimas para vetorvitima
     const [pressao, setPressao] = useState('');
     const [frequencia, setFrequencia] = useState('');
     const [saturacao, setSaturacao] = useState('');
     const [risco, setRisco] = useState<Number>(1);
     const [observacoes, setObservacoes] = useState('');
     const [corRisco, setCorRisco] = useState('');
-
+    
+    //Navegação entre páginas
     const navigation = useNavigation();
     const route = useRoute();
+    //informações vindas de Ocorrencia.tsx (Typagem logo após os imports Linha 20)
     const { idOcorrencia } = route.params as RouteParams; // o route.params não sabe qual é então foi criada a tipagem acima
 
+    //Desloga do APP
     const handleLogout = Out();
-
+    
+    //Pega os padrões de cores em /styles/especColors 
     const riscoPadrao = (par: number) => {
         if (par === 1) { return { 'cor': especColors.risco.naoUrgencia, 'msg': msg.risco.naoUrgencia }; }
         if (par === 2) { return { 'cor': especColors.risco.poucaUrgencia, 'msg': msg.risco.poucaUrgencia }; }
@@ -414,6 +422,7 @@ export function IncluiVitima() {
     }, []);
 
     useEffect(() => {
+        //Pega os padrões de cores em /styles/especColors 
         if (risco === 1) { setCorRisco(especColors.risco.naoUrgencia) }
         if (risco === 2) { setCorRisco(especColors.risco.poucaUrgencia) }
         if (risco === 3) { setCorRisco(especColors.risco.urgencia) }

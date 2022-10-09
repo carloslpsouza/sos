@@ -9,7 +9,8 @@ export type HospitalProps =  {
         bairro: string,
         cidade: string,
         lotacao: number,
-        em_aberto: string
+        em_aberto: string,
+        URL?: string
 }
 
 type Props = IPressableProps & {
