@@ -1,255 +1,113 @@
 import React, { useState, useEffect } from 'react';
-import { Alert } from 'react-native';
-import { HStack, IconButton, VStack, useTheme, Text, Heading, FlatList, Center, Input, Icon, Box } from 'native-base';
-import { SignOut, QrCode, House, AlignBottom } from 'phosphor-react-native';
-
+import { ScrollView } from 'react-native';
+import { HStack, IconButton, VStack, useTheme, Heading, KeyboardAvoidingView } from 'native-base';
+import { SignOut } from 'phosphor-react-native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import auth from '@react-native-firebase/auth'
 import firestore from '@react-native-firebase/firestore';
 
-import { useNavigation, useRoute } from '@react-navigation/native';
-
-import { dateFormat } from '../utils/firestoreDateFormats'
-
+//Estilos e animações
 import Logo from '../assets/Logo.svg';
 import { Button } from '../componentes/Button';
-
+import { Input } from '../componentes/Input'
 import { Loading } from '../componentes/Loading';
+import { especColors } from '../styles/especColors';
+
+//Regra de negócio
 import { Out } from '../utils/Out';
 
-type RouteParams = { // Essa tipagem foi criada apenas para que o auto complite pudesse achar esse paramentro (Testar sem)
-    idOcorrencia: string; //Erro de tipo não pode ser und (Consultar navigation.d.ts)
-}
-
 export function Home() {
-    const { colors } = useTheme();
-    const [isLoading, setIsLoading] = useState(true);
+  //Estilização
+  const { colors } = useTheme();
+  const [isLoading, setIsLoading] = useState(true);
+  const [titulo, setTitulo] = useState('BEM VINDO');
 
-    const [vetorOcorrencias, setVetorOcorrencias] = useState([]);
-    const [vtr, setVtr] = useState('');
+  //Navegação entre páginas
+  const navigation = useNavigation();
+  const route = useRoute();
 
-    const [inicial, setInicial] = useState(true);
-    const [insereVtr, setinsereVtr] = useState(false);
-    const [saidaBase, setSaidaBase] = useState(false);
-    const [chegadaLocal, setChegadaLocal] = useState(false);
-    const [idOcorrencia, setIdOcorrencia] = useState('');
+  //Dados regra de negócio
+  const [vtr, setVtr] = useState('');
+  const userLocal = auth().currentUser.email;
 
-    const navigation = useNavigation();
-    const route = useRoute();
+  //controle exibição componentes
+  const [formViatura, setFormViatura] = useState(false);
 
-    const handleLogout = Out();
+  const handleLogout = Out();
+  
+  const navegarSaidaBase = (idOcorrencia: string) => {
+    navigation.navigate('iniciaOcorrencia', { idOcorrencia })
+  }
 
-    function novaOcorrencia() {//
-        setInicial(false);
-        setinsereVtr(true); // Mostra Input para viatura
+  function gravaDados(COLLECTION: string, DATA: any, SOLICITANTE: string, MSG: string) {
+    console.log("Parametros: " + COLLECTION, SOLICITANTE);
+    if (!DATA) {
+      console.log(MSG, 'Verifique os campos e tente novamente');
     }
+    firestore()
+      .collection(COLLECTION)
+      .add(DATA)
+      .then((docRef) => { //docRef retorna LastInsertID        
+        console.log(SOLICITANTE + " - Gravado com sucesso! ID do documento: " + docRef.id);
+        navegarSaidaBase(docRef.id);        
+      })
+      .catch((error) => {
+        console.log(SOLICITANTE + ": Erro na gravação: " + error);
+        console.log(MSG, 'Não foi possivel gravar o registro.');
+      });
+  }
 
-    function navRegSaidaBase() {//==>Navega até Seleciona VTR
-        gravaDados();
-        setinsereVtr(false);
-        setSaidaBase(true);
+  function gravaViatura() {
+    const data = {
+      'vtr': vtr,
+      'userLocal': userLocal
     }
+    console.log(data);
+    gravaDados('OCORRENCIA', data, 'navegaViatura - home.tsx', 'VTR OU EQUIPE')
+      
+  }
+  function navegaViatura() {
+    setTitulo('VIATURA OU EQUIPE');
+    setFormViatura(true);
+  }
 
-    function navInsChegLocal() {
-        setSaidaBase(false);
-        setChegadaLocal(true);
-    }
+  useEffect(() => {
 
-    function navHome() {
-        setChegadaLocal(false);
-        setInicial(true);
-    }
+    console.log('================ > Home.tsx - useEffect');
+  }, []);
 
-    function gravaDados() {
-        if (!vtr) {
-            setInicial(true);
-            setinsereVtr(false);
-            return Alert.alert('VTR / Equipe', 'Verifique os campos e tente novamente');
-        }
-        //setIsLoading(true);
-        firestore()
-            .collection('OCORRENCIA')
-            .add({
-                vtr,
-                ts_saida_base: firestore.FieldValue.serverTimestamp()
-            })
-            .then((docRef) => { //docRef retorna LastInsertID
-                console.log(docRef.id);
-                setIdOcorrencia(docRef.id);
-                getOcorrencia(docRef.id);
-                //navigation.navigate('ocorrencia', { idOcorrencia })
-            })
-            .catch((error) => {
-                console.log(error);
-                setIsLoading(false);
-                return Alert.alert('VTR / Equipe', 'Não foi possivel gravar o registro.');
-            });
-    }
-
-    function atualizaDados(idOco: string) {
-        
-        //setIsLoading(true);
-        firestore()
-            .collection('OCORRENCIA')
-            .doc(idOco)
-            .update({
-                ts_chegada_local: firestore.FieldValue.serverTimestamp()
-            })
-            .then(() => { //docRef retorna LastInsertID
-                getOcorrencia(idOcorrencia);
-                navigation.navigate('ocorrencia', { idOcorrencia });
-            })
-            .catch((error) => {
-                console.log(error);
-                setIsLoading(false);
-                return Alert.alert('VTR / Equipe', 'Não foi possivel gravar o registro.');
-            });
-    }
-
-    function getOcorrencia(idOco: string) {
-        firestore()
-        .collection("OCORRENCIA")
-        .doc(idOco)
-        .onSnapshot((doc) => {
-        //console.log("Current data: ", doc.data());
-        const data = {
-            id: idOco,
-            vtr: doc.data().vtr,
-            dt_saida: dateFormat(doc.data().ts_saida_base)
-        }
-        setVetorOcorrencias([data]);
-        console.log(vetorOcorrencias);
-
-    });
-    }
-
-    useEffect(() => {
-        //getOcorrencia(idOcorrencia)
-    }, []);
-
-    if (!inicial) { //Componente só renderiza para estruturar useEffect
-        <VStack />
-    }
-
-    if (inicial) {
-        return (
-            <VStack flex={1} pb={1} bg="#565656">
-                <HStack w="full" justifyContent="space-between" alignItems="center" bg="#FFFAF0" pt={1} pb={1} px={2}>
-                    <Logo />
-                    <IconButton
-                        icon={<SignOut size={26} color={colors.black} />}
-                        onPress={handleLogout}
-                    />
-                </HStack>
-                <HStack h='4/6'>
-                    <Text></Text>
-                </HStack>
-
-                <VStack m={4}>
-                    <Button title="Minhas ocorrências" mb={10} /* onPress={/* () => handleNewOrder(hospitalId) } */ />
-                    <Button title="Nova ocorrencia" mb={10} onPress={() => novaOcorrencia()} />
-                </VStack>
-            </VStack>
-        );
-    }//inicial
-    if (insereVtr) {
-        return (
-            <VStack flex={1} pb={1} bg="#565656">
-                <HStack w="full" justifyContent="space-between" alignItems="center" bg="#FFFAF0" pt={1} pb={1} px={2}>
-                    <Logo />
-                    <IconButton
-                        icon={<SignOut size={26} color={colors.black} />}
-                        onPress={handleLogout} />
-                </HStack>
-
-                <VStack px={6} alignItems="center">
-                    <VStack m={0}>
-                        <Heading fontSize={16} mt={5} color="#fff">
-                            EQUIPE OU VTR
-                        </Heading>
-                    </VStack>
-                    <VStack m={0} h='3/6' space={4} >
-                        <Icon as={<QrCode color="white" size={100} />} m={5} />
-                    </VStack>
-                    <VStack m={0} w='full'>
-                        <Input color={colors.white} placeholder="Equipe ou VTR" m={5} onChangeText={setVtr} />
-                        <Button title="Avançar" onPress={() => navRegSaidaBase()} />
-                    </VStack>               
-                </VStack>
-            </VStack>
-        );
-    }//insereVtr
-    if (saidaBase) {
-        return (
-            <VStack flex={1} w="full" h='full' justifyContent="space-between" pb={1} bg="#565656">
-                <HStack alignItems="center" bg="#FFFAF0" pt={1} pb={1} px={2}>
-                    <Logo />
-                    <IconButton
-                        icon={<SignOut size={26} color={colors.black} />}
-                        onPress={handleLogout}  />
-                </HStack>
-                <VStack alignItems={'center'}>
-                     <Heading fontSize={16} mt={5} color="#fff" >
-                        SAÍDA DA BASE: { vetorOcorrencias[0] ? vetorOcorrencias[0].vtr.toString().toUpperCase() : null }
-                    </Heading>
-                </VStack>
-                <VStack m={0} space={4}  alignItems="center" h='4/6'>
-                    
-                </VStack>
-                <VStack px={6} alignItems="center">                    
-                    <Button title="Registrar saída" mb={5} w={'full'} onPress={() => navInsChegLocal()} />
-                </VStack>
-
-            </VStack>
-        );
-    }//saidaBase
-    if (chegadaLocal) {
-        return (
-            <VStack flex={1} pb={1} bg="#565656">
-                <HStack w="full" justifyContent="space-between" alignItems="center" bg="#FFFAF0" pt={1} pb={1} px={2}>
-                    <Logo />
-                    <IconButton
-                        icon={<SignOut size={26} color={colors.black} />}
-                        onPress={handleLogout}
-                    />
-                </HStack>
-
-                <VStack flex={1} px={6} alignItems="center">
-                    <Heading fontSize={16} mt={5} color="#fff">
-                        CHEGADA AO LOCAL:  {  vetorOcorrencias[0] ? vetorOcorrencias[0].vtr.toString().toUpperCase() : null }
-                    </Heading>
-                    <FlatList
-                        data={vetorOcorrencias}
-                        keyExtractor={item => item.id}
-                        renderItem={({ item }) => (
-                            <VStack flex={1}
-                                bg="#FFFAF0"
-                                mt={2}
-                                mb={2}
-                                height={16}
-                                alignItems="center"
-                                justifyContent="space-between"
-                                rounded="sm"
-                                overflow="hidden">
-                                <Text color="black" fontSize="md" m={5}>Saída de Base: {item.dt_saida}</Text>
-                            </VStack>
-                        )}
-                        showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={{ paddingBottom: 50 }}
-                        ListEmptyComponent={() => (
-                            <Center>
-                                <Text color="#fff" fontSize="xl" mt={6} textAlign="center">
-                                    {'\n'}
-                                </Text>
-                            </Center>
-                        )}
-                    />
-                    <IconButton
-                        icon={<House color="white" size={100} />}
-                        onPress={navHome}
-                    />
-                    <Button title="Registrar chegada" mb={5} w={'full'} onPress={() => atualizaDados(idOcorrencia)} />
-                </VStack>
-
-            </VStack>
-        );
-    }//chegadaLocal
+  return (
+    <VStack flex={1} pb={1} bg="#565656">
+      <HStack w="full" justifyContent="space-between" alignItems="center" bg="#FFFAF0" pt={1} pb={1} px={2}>
+        <Logo />
+        <IconButton
+          icon={<SignOut size={26} color={colors.black} />}
+          onPress={handleLogout}
+        />
+      </HStack>
+      <KeyboardAvoidingView
+        behavior="height"
+        style={{ flex: 1 }}
+        bg={especColors.coresPadrao.bg0}
+      >
+        <ScrollView>
+          <VStack flex={1} px={6} alignItems="center">
+            <Heading fontSize={16} mt={5} color="#fff">
+              {titulo}
+            </Heading>
+          </VStack>
+          {
+            formViatura &&
+              <Input color={colors.white} placeholder="Equipe ou VTR" m={5} onChangeText={(text) => { setVtr(text) }} />
+          }
+        </ScrollView>
+      </KeyboardAvoidingView>
+      {
+        formViatura ? 
+        <Button title="Gravar" m={5} px={5} onPress={gravaViatura} /> :
+        <Button title="Nova Ocorrência" m={5} px={5} onPress={navegaViatura} />
+      }
+      
+    </VStack>
+  );
 }

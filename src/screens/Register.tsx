@@ -3,12 +3,15 @@ import React, { useEffect, useState } from 'react';
 import { Heading, HStack, IconButton, KeyboardAvoidingView, useTheme, VStack, Text, FormControl, Select, Center } from 'native-base';
 import { SignOut } from 'phosphor-react-native';
 import { useNavigation, useRoute } from '@react-navigation/native'
+import firestore from '@react-native-firebase/firestore';
+import Geolocation from '@react-native-community/geolocation';
 import { Hourglass } from 'phosphor-react-native';
+
+//Componentes
 import { Input } from '../componentes/Input';
 import InputMask from "../componentes/InputMask";
 import { Button } from '../componentes/Button';
-import firestore from '@react-native-firebase/firestore';
-import Geolocation from '@react-native-community/geolocation';
+
 
 import Logo from '../assets/Logo.svg';
 import { especColors } from "../styles/especColors"
@@ -59,6 +62,9 @@ export function Register() {
     const handleLogout = Out();
 
     function sinaisVitais(idPaciente: string) {
+        if (!pressao || !frequencia || !saturacao) {
+            return Alert.alert('Registrar', 'Verifique os campos e tente novamente');
+        }
         setIsLoading(true);
         firestore()
             .collection('ATENDIMENTO')
@@ -108,7 +114,7 @@ export function Register() {
     }
 
     function getHospital() {
-        console.log("getHosp");
+        //console.log("getHosp");
 
         const db = firestore();
         const docRef = db.collection('HOSPITAL').doc(hospitalId);
@@ -266,10 +272,10 @@ export function Register() {
                 setDistancia((temp1.routes[0].summary.distance));
                 //setTempo(temp1.routes[0].summary.duration);
                 let tst = 600;
-                if(tst > 6000){
-                    setTempo({'temp': (temp1.routes[0].summary.duration)/60, 'tipo': 'horas'})
-                }else{
-                    setTempo({'temp': (temp1.routes[0].summary.duration)/60, 'tipo': 'min'})
+                if (tst > 6000) {
+                    setTempo({ 'temp': (temp1.routes[0].summary.duration) / 60, 'tipo': 'horas' })
+                } else {
+                    setTempo({ 'temp': (temp1.routes[0].summary.duration) / 60, 'tipo': 'min' })
                 }
             }
         };
@@ -286,6 +292,10 @@ export function Register() {
         //console.log(infoGeo(origem.toString(), destino.toString()));
     }
 
+    function pagResOcorrencia() {
+        navigation.navigate('finalizaOcorrencia', { hospitalId, idOcorrencia });
+    }
+
     useEffect(() => {
         Geolocation.getCurrentPosition(info => {
             console.log(info.coords)
@@ -294,7 +304,7 @@ export function Register() {
     }, []);
 
     useEffect(() => {
-        getHospital();        
+        getHospital();
     }, [origem]);
 
     useEffect(() => {
@@ -313,27 +323,34 @@ export function Register() {
         if (!risco) { setCorRisco(colors.white) }
     }, [risco]);
 
-    useEffect(()=>{
-        console.log('org' + origem );
-        console.log('dst' + destino );
-        if(origem && destino){
+    useEffect(() => {
+        console.log('org' + origem);
+        console.log('dst' + destino);
+        if (origem && destino) {
             infoGeo(origem.toString(), destino.toString())
         }
-    },[origem, destino]);
+    }, [origem, destino]);
+
+    useEffect(() => {
+        console.log('================ > Register.tsx - useEffect');
+        console.log('Hosp: ' + hospitalId);
+        console.log('Ocor: ' + idOcorrencia);
+        //getOcorrencia(idOcorrencia)
+    }, []);
 
     return (
         <KeyboardAvoidingView
             behavior="height"
             keyboardVerticalOffset={80}
             style={{ flex: 1 }}
-            bg="#565656"
+            bg={especColors.coresPadrao.bg0}
         >
             <ScrollView>
                 <HStack
                     w="full"
                     justifyContent="space-between"
                     alignItems="center"
-                    bg="#FFFAF0"
+                    bg={especColors.coresPadrao.head0}
                     pt={1}
                     pb={1}
                     px={2}
@@ -345,7 +362,7 @@ export function Register() {
                     />
                 </HStack>
 
-                <HStack bg="gray.500" justifyContent="center" p={4}>
+                <HStack bg={especColors.coresPadrao.bgTitulos} justifyContent="center" p={4}>
                     <Hourglass size={22} color={colors.green[300]} />
                     <Text
                         fontSize="sm"
@@ -356,8 +373,8 @@ export function Register() {
                         Conduzir para Hospital
                     </Text>
                 </HStack>
-                <VStack justifyContent="center" p={4}>
-                    <Heading justifyContent="center" >
+                <VStack justifyContent="center" p={4} space={1} alignItems="center">
+                    <Heading textAlign={'center'}>
                         <Text
                             fontSize="sm"
                             ml={2}
@@ -367,7 +384,7 @@ export function Register() {
                         </Text>
                     </Heading>
                 </VStack>
-                <VStack w='full' bg={'#000'} space={1} alignItems="center">
+                <VStack w='full' bg={especColors.coresPadrao.bg1} space={1} alignItems="center">
                     <Heading>
                         <Text
                             textAlign='center'
@@ -382,27 +399,28 @@ export function Register() {
                         hospital ?
                             <>
                                 <Hospital dataHospital={hospital} w='full' />
-                                <Text color={colors.white}>Distância: {distancia ? (Number(distancia)/1000).toFixed(2) : isLoading} km</Text>
-                                <Text color={colors.white}>Tempo para chegada: {tempo ? (tempo.temp).toFixed(2) +" "+ tempo.tipo + "\n" : isLoading}</Text>
+                                <Text color={colors.white}>Distância: {distancia ? (Number(distancia) / 1000).toFixed(2) + "km" : isLoading} </Text>
+                                <Text color={colors.white}>Tempo para chegada: {tempo ? (tempo.temp).toFixed(2) + " " + tempo.tipo + "\n" : isLoading}</Text>
                             </>
                             :
                             isLoading
                     }
                 </VStack>
-                <VStack w='full' space={1}>
-                    <HStack
-                        w="full"
-                        justifyContent="space-between"
-                        alignItems="center"
-                        pt={1}
-                        pb={1}
-                        px={2}>
-                        <Button title='Não' m={1} w='2/5' />
-                        <Button title='Sim' m={1} w='2/5' onPress={() => { openGps(hospital.latitude, hospital.longitude, hospital.URL) }} />
-                    </HStack>
-                </VStack>
+
 
             </ScrollView>
+            <VStack w='full' space={1} mb={5}>
+                <HStack
+                    w="full"
+                    justifyContent="space-between"
+                    alignItems="center"
+                    pt={1}
+                    pb={1}
+                    px={2}>
+                    <Button title='Não' m={1} w='2/5' />
+                    <Button title='Sim' m={1} w='2/5' onPress={() => { openGps(hospital.latitude, hospital.longitude, hospital.URL), pagResOcorrencia() }} />
+                </HStack>
+            </VStack>
         </KeyboardAvoidingView>
 
     );
