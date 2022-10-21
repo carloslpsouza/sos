@@ -35,9 +35,9 @@ export function SelectHospital() {
     //Desloga do APP
     const handleLogout = Out();
 
-    function handleSetaHospital(hospitalId: string) {
+    function selecionaHospital(hospitalId: string) {
         console.log(hospitalId);
-        navigation.navigate('new', { hospitalId, idOcorrencia })
+        navigation.navigate('register', { hospitalId, idOcorrencia })
     }
 
     useEffect(() => {
@@ -91,6 +91,11 @@ export function SelectHospital() {
         return subscribe;
     }, []);
 
+    useEffect(() => {
+        console.log('================ > SelectHospital.tsx - useEffect'); 
+        //getOcorrencia(idOcorrencia)
+    }, []);
+
     return (
         <VStack flex={1} pb={1} bg="#565656">
             <HStack w="full" justifyContent="space-between" alignItems="center" bg="#FFFAF0" pt={1} pb={1} px={2}>
@@ -120,7 +125,7 @@ export function SelectHospital() {
                         <FlatList
                             data={hospitais}
                             keyExtractor={item => item.id}
-                            renderItem={({ item }) => <Hospital dataHospital={item} onPress={() => handleSetaHospital(item.id)} />}
+                            renderItem={({ item }) => <Hospital dataHospital={item} onPress={() => selecionaHospital(item.id)} />}
                             showsHorizontalScrollIndicator={false}
                             contentContainerStyle={{ paddingBottom: 50 }}
                             ListEmptyComponent={() => (

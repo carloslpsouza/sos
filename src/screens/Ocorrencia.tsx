@@ -32,8 +32,8 @@ export function Ocorrencia() {
     const [isLoading, setIsLoading] = useState(true);
     const [statusSelected, setStatusSelected] = useState<'open' | 'close'>('open');
 
-    const [vetor_ocorrencias, setVetor_ocorrencias] = useState<OcorrenciasT[]>([]);
-    //const [vetor_ocorrencias, setVetor_ocorrencias] = useState<OrderProps[]>([]);
+    const [vetorOcorrencias, setvetorOcorrencias] = useState<OcorrenciasT[]>([]);
+    //const [vetorOcorrencias, setvetorOcorrencias] = useState<OrderProps[]>([]);
     const [vtr, setVtr] = useState('');
     const [relato, setRelato] = useState('');
 
@@ -50,7 +50,7 @@ export function Ocorrencia() {
 
     const handleLogout = Out();
 
-    function navIncVit() {
+    function navRegVitimas() {
         atualizaDados(idOcorrencia);
         navigation.navigate('incluiVitima', { idOcorrencia })
     }
@@ -90,9 +90,9 @@ export function Ocorrencia() {
                     dt_saida: dateFormat(doc.data().ts_saida_base),
                     dt_chegada: dateFormat(doc.data().ts_chegada_local)
                 }
-                setVetor_ocorrencias([data]);
-                console.log(vetor_ocorrencias);
-
+                setvetorOcorrencias([data]);
+                console.log('Ocorrencia.tsx - getOcorrencia');                
+                console.log(vetorOcorrencias);
             } else {
                 // doc.data() will be undefined in this case
                 console.log("No such document!");
@@ -104,6 +104,10 @@ export function Ocorrencia() {
     }
     useEffect(() => {
         getOcorrencia(idOcorrencia)
+    }, []);
+    useEffect(() => {
+        console.log('Ocorrencia.tsx - useEffect'); 
+        //getOcorrencia(idOcorrencia)
     }, []);
 
     if (!inicial) { //Componente só renderiza para estruturar useEffect
@@ -123,11 +127,11 @@ export function Ocorrencia() {
 
                 <VStack flex={1} px={6} alignItems="center">
                     <Heading fontSize={16} mt={5} color="#fff">
-                        RELATÓRIO INICIAL: { vetor_ocorrencias[0] ? vetor_ocorrencias[0].vtr.toString().toUpperCase() : null}
+                        RELATÓRIO INICIAL: { vetorOcorrencias[0] ? vetorOcorrencias[0].vtr.toString().toUpperCase() : isLoading}
                     </Heading>
                     <FlatList
                         w={'full'}
-                        data={vetor_ocorrencias}
+                        data={vetorOcorrencias}
                         keyExtractor={item => item.id}
                         renderItem={({ item }) => (
                             <>
@@ -181,7 +185,7 @@ export function Ocorrencia() {
                         h={24}
                         m={4}
                     />
-                    <Button title="Incluir vítima" mb={5} w={'full'} onPress={() => navIncVit()} />
+                    <Button title="Incluir vítima" mb={5} w={'full'} onPress={() => navRegVitimas()} />
                 </VStack>
 
             </VStack>
