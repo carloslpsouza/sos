@@ -1,6 +1,6 @@
 import React from "react";
 import { Input } from '../componentes/Input';
-import { Text, TextInput, StyleSheet, TextInputProps } from "react-native";
+import { TextInputProps } from "react-native";
 
 import { maskCpf, maskDefault, maskPhone, maskPressao, maskTemperatura } from "../utils/masks";
 

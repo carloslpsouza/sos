@@ -5,7 +5,6 @@ export declare global {
             iniciaOcorrencia: { idOcorrencia: String };
             ocorrencia: { idOcorrencia: String } ;
             incluiVitima: { idOcorrencia: String };
-            resumoOcorrencia: {  idOcorrencia: String  };
             SelectHospital: {  idOcorrencia: String  };
             register: { hospitalId: String, idOcorrencia?: string };
             finalizaOcorrencia: { hospitalId?: String, idOcorrencia?: string };

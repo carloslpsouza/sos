@@ -44,6 +44,43 @@ export function getOcorrenciaSnap(COLLECTION: string, IDDOC: string, SOLICITANTE
   });
 }
 
+export function getMinhasOcorrencias(user: string) {
+
+  return new Promise((resolve, reject) => {
+
+    firestore().collection('OCORRENCIA')
+      .where('userLocal', '==', user)
+      .onSnapshot(snapshot => {
+        snapshot.docs.map(doc => {
+          const {
+            vtr,
+            ocorrencia,
+            ts_saida_base,
+            ts_chegada_local,
+            ts_saida_local,
+            ts_chegada_hospital,
+            ts_saida_hospital,
+            ts_retorno_base,
+            vetorVitimas
+          } = doc.data();
+          resolve({
+            id: doc.id,
+            vtr,
+            ocorrencia,
+            dt_saida_base: dateFormat(ts_saida_base),
+            dt_chegada_local: dateFormat(ts_chegada_local),
+            dt_saida_local: dateFormat(ts_saida_local),
+            dt_chegada_hospital: dateFormat(ts_chegada_hospital),
+            dt_saida_hospital: dateFormat(ts_saida_hospital),
+            dt_retorno_base: dateFormat(ts_retorno_base),
+            vetorVitimas
+          });
+        });
+      });
+
+  });
+}
+
 export function atualizaDados(IDDOC: string, DATA: any, SOLICITANTE?: string, MSG?: string) {
   console.log("Parametros: " + IDDOC, SOLICITANTE, DATA);
 
@@ -92,7 +129,11 @@ function sinaisVitais(idPaciente: string, DATA: any, DATAOCORRENCIA: any) {
   return new Promise((resolve, reject) => {
     firestore()
       .collection('ATENDIMENTO')
-      .add({paciente:idPaciente, ...DATA.sinaisVitais, ...DATAOCORRENCIA}) //ver como unir o ID com o resto do objeto json
+      .add({
+        paciente: idPaciente,
+        ...DATA.sinaisVitais,
+        ...DATAOCORRENCIA
+      }) //ver como unir o ID com o resto do objeto json
       .then(() => {
         console.log('Entrada', 'Registrado com sucesso!');
       })
@@ -124,7 +165,7 @@ export function transfereHospital(DATA: any, DATAOCORRENCIA: any, SOLICITANTE?: 
   console.log("Parametros: " + SOLICITANTE, DATA.length, DATA);
 
   return new Promise((resolve, reject) => {
-    DATA.forEach((DATA)=>{dadosPessoais(DATA, DATAOCORRENCIA)})
+    DATA.forEach((DATA) => { dadosPessoais(DATA, DATAOCORRENCIA) })
     resolve(true)
   })
 }
