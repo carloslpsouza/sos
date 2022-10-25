@@ -15,27 +15,17 @@ import InputMask from '../componentes/InputMask';
 //Estilos e animações
 import Logo from '../assets/Logo.svg';
 import { especColors } from "../styles/especColors"
-import { Hospital, HospitalProps } from '../componentes/Hospital';
 
 //Regra de negócio
 import { Out } from '../utils/Out';
 import { atualizaDados } from '../utils/crud'
 import { dateFormat } from '../utils/firestoreDateFormats';
 import { msg } from '../utils/mensagensPadrao';
+import { OcorrenciaProps, VitimasProps } from '../componentes/CardOcorrencia';
+import { Order } from '../componentes/Order';
 
 type RouteParams = { // Essa tipagem foi criada apenas para que o auto complite pudesse achar esse paramentro (Testar sem)
   idOcorrencia?: string;
-}
-type OcorrenciaProps = {
-  vtr: string,
-  userLocal: string,
-  ocorrencia?: string,
-  dt_saida_base?: string,
-  dt_chegada_local?: string,
-  dt_saida_local?: string,
-  dt_chegada_hospital?: string,
-  dt_saida_hospital?: string,
-  dt_retorno_base?: string,
 }
 
 export function IncluiVitima() {
@@ -56,6 +46,7 @@ export function IncluiVitima() {
   //Dados regra de negócio
   const [vetorOcorrencias, setVetorOcorrencias] = useState([]);
   const [vetorVitimas, setVetorVitimas] = useState([]);
+  const [vetorVitimasTemp, setVetorVitimasTemp] = useState([]);
   const [relato, setRelato] = useState('')
 
   //dados pessoais das vitimas para vetorvitima
@@ -100,18 +91,20 @@ export function IncluiVitima() {
   }
 
   function arrVitimas() {
+    let validaNome = nmPaciente == "" ? 'Desconhecido' : nmPaciente;
     const objTemp = {
       "sinaisVitais": {
-        "Pressão": pressao,
-        "Frequência": frequencia,
-        "Saturação": saturacao,
-        "Observações": observacoes,
-        "Risco": risco,
+        pressao: pressao,
+        frequencia: frequencia,
+        saturacao: saturacao,
+        problema: observacoes,
+        risco: risco,
       },
       "dadosPessoais": {
-        "Nome": nmPaciente,
-        "CPF": cpf,
-        "Telefone": telefone
+        nmPaciente: validaNome,
+        cpf: cpf,
+        telefone: telefone,
+        origem: 'sos'
       }
     }
     vetorVitimas.push(objTemp);
@@ -286,10 +279,12 @@ export function IncluiVitima() {
           dt_saida_local: dateFormat(data.ts_saida_local),
           dt_chegada_hospital: dateFormat(data.ts_chegada_hospital),
           dt_saida_hospital: dateFormat(data.ts_saida_hospital),
-          dt_retorno_base: dateFormat(data.ts_retorno_base)
+          dt_retorno_base: dateFormat(data.ts_retorno_base),
+          vetorVitimas: data.vetorVitimas
         }
         setVetorOcorrencias([dt]);
-        console.log(dt);
+        setVetorVitimasTemp(dt.vetorVitimas)
+        console.log(vetorVitimasTemp);
         setIsLoading(false);
       });
 
@@ -342,49 +337,20 @@ export function IncluiVitima() {
                 <VStack w={'full'}>
                   {
                     exibeComponentes[1] == 1 || exibeComponentes[2] == 1 || exibeComponentes[3] == 1 ?
-                      <FlatList
-                        data={vetorVitimas}
-                        keyExtractor={item => item.id}
-                        renderItem={({ item }) => (
-                          <>
-                            <VStack flex={1}
-                              bg={especColors.coresPadrao.card0}
-                              m={1}
-                              height={20}
-                              alignItems="center"
-                              justifyContent="space-between"
-                              rounded="sm"
-                              overflow="hidden"
-                            >
+                    <FlatList
+                    data={vetorVitimasTemp}
+                    renderItem={({ item }) => <Order data={item} onPress={() => null} />}
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={{ paddingBottom: 50 }}
+                    ListEmptyComponent={() => (
+                      <Center>
+                        <Text color="#fff" fontSize="xl" mt={6} textAlign="center">
+                          0 Pacientes {'\n'}
 
-                              <HStack >
-                                <Box h="full" w={6} bg={riscoPadrao(Number(item.sinaisVitais.Risco)).cor} />
-                                <HStack w='full' h='20' pt={1} pb={1}>
-                                  <Text color="black" fontSize="md" m={1} alignItems='center'>
-                                    Vitima: {item.dadosPessoais.Nome ? item.dadosPessoais.Nome : 'Desconhecido'}
-                                    {item.dadosPessoais.CPF ? " | CPF: " + item.dadosPessoais.CPF : null}
-                                    {'\n'}
-                                    Press: {item.sinaisVitais.Pressão} |
-                                    Freq: {item.sinaisVitais.Frequência} |
-                                    Sat: {item.sinaisVitais.Saturação}
-                                  </Text>
-                                </HStack>
-                              </HStack>
-                            </VStack>
-
-                          </>
-
-                        )}
-                        showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={{ paddingBottom: 50 }}
-                        ListEmptyComponent={() => (
-                          <Center>
-                            <Text color="#fff" fontSize="xl" mt={6} textAlign="center">
-                              {'\n'}
-                            </Text>
-                          </Center>
-                        )}
-                      /> :
+                        </Text>
+                      </Center>
+                    )}
+                  /> :
                       null
                   }
                   {

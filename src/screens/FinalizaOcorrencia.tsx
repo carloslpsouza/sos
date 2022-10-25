@@ -16,24 +16,13 @@ import { Hospital, HospitalProps } from '../componentes/Hospital';
 
 //Regra de negócio
 import { Out } from '../utils/Out';
-import { atualizaDados, transfereHospital } from '../utils/crud'
+import { atualizaDados, getOcorrencia, transfereHospital } from '../utils/crud'
 import { dateFormat } from '../utils/firestoreDateFormats';
+import { OcorrenciaProps } from '../componentes/CardOcorrencia';
 
 type RouteParams = { // Essa tipagem foi criada apenas para que o auto complite pudesse achar esse paramentro (Testar sem)
   idOcorrencia?: string,
   hospitalId?: string,
-}
-type OcorrenciaProps = {
-  vtr: string,
-  userLocal: string,
-  ocorrencia?: string,
-  dt_saida_base?: string,
-  dt_chegada_local?: string,
-  dt_saida_local?: string,
-  dt_chegada_hospital?: string,
-  dt_saida_hospital?: string,
-  dt_retorno_base?: string,
-  vitimas?: []
 }
 
 export function FinalizaOcorrencia() {
@@ -52,13 +41,12 @@ export function FinalizaOcorrencia() {
 
   //Dados regra de negócio
   const [vetorOcorrencias, setVetorOcorrencias] = useState([]);
-  const [vetorVitimas, setVetorVitimas] = useState([]);
-  const [relato, setRelato] = useState('')
+  const [trava, setTrava] = useState(true);
 
   const handleLogout = Out();
 
   const navegarHome = () => {
-    navigation.navigate('home')
+    navigation.navigate('home');
   }
 
   function timeStamp(ts: {}, altComp: number) {
@@ -100,12 +88,21 @@ export function FinalizaOcorrencia() {
           dt_chegada_hospital: dateFormat(data.ts_chegada_hospital),
           dt_saida_hospital: dateFormat(data.ts_saida_hospital),
           dt_retorno_base: dateFormat(data.ts_retorno_base),
-          vitimas: data.vetorVitimas
+          vetorVitimas: data.vetorVitimas
         }
         setVetorOcorrencias([dt]);
-        transfereHospital(dt.vitimas, {status: 'open', vtr: dt.vtr, ocorrencia: idOcorrencia, hospital: hospitalId}, 'FinalizaOcorrencia.tsx - useEffect ======================', 'Tranfere data')
-        .then((data: any)=>{console.log(data)})
-        console.log(dt);
+        firestore().collection('ATENDIMENTO')
+          .where('ocorrencia', '==', idOcorrencia).get().then((doc) => {
+            console.log(doc.empty.valueOf());
+            if (doc.empty.valueOf()) {
+               transfereHospital(dt.vetorVitimas, { status: 'open', vtr: dt.vtr, ocorrencia: idOcorrencia, hospital: hospitalId, created_at: firestore.FieldValue.serverTimestamp() }, 'FinalizaOcorrencia.tsx - useEffect ======================', 'Tranfere data')
+                .then((data: any) => {
+                  console.log(data)
+                })
+                console.log('gravaria');               
+            }
+          })
+
         setIsLoading(false);
       });
 
@@ -152,7 +149,7 @@ export function FinalizaOcorrencia() {
                         rounded="sm"
                         overflow="hidden">
                         <HStack p={5} pl={2}>
-                          <PersonSimpleRun size={26} color={colors.black}/>
+                          <PersonSimpleRun size={26} color={colors.black} />
                           <Text color="black" fontSize="md">Saída Base: {item.dt_saida_base}</Text>
                         </HStack>
                       </VStack>
@@ -231,7 +228,7 @@ export function FinalizaOcorrencia() {
                           overflow="hidden">
                           <HStack p={5} pl={1}>
                             <Buildings size={26} color={colors.black} />
-                            <Text color="black" fontSize="md">Retorno à base`: {item.dt_retorno_base}</Text>
+                            <Text color="black" fontSize="md">Retorno à base: {item.dt_retorno_base}</Text>
                           </HStack>
                         </VStack>
                       }

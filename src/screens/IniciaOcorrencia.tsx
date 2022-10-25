@@ -14,26 +14,16 @@ import { Loading } from '../componentes/Loading';
 //Estilos e animações
 import Logo from '../assets/Logo.svg';
 import { especColors } from "../styles/especColors"
-import { Hospital, HospitalProps } from '../componentes/Hospital';
 
 //Regra de negócio
 import { Out } from '../utils/Out';
 import { atualizaDados } from '../utils/crud'
 import { dateFormat } from '../utils/firestoreDateFormats';
+import { Hospital, HospitalProps } from '../componentes/Hospital';
+import { OcorrenciaProps } from '../componentes/CardOcorrencia'
 
 type RouteParams = { // Essa tipagem foi criada apenas para que o auto complite pudesse achar esse paramentro (Testar sem)
   idOcorrencia?: string;
-}
-type OcorrenciaProps = {
-  vtr: string,
-  userLocal: string,
-  ocorrencia?: string,
-  dt_saida_base?: string,
-  dt_chegada_local?: string,
-  dt_saida_local?: string,
-  dt_chegada_hospital?: string,
-  dt_saida_hospital?: string,
-  dt_retorno_base?: string,
 }
 
 export function IniciaOcorrencia() {
