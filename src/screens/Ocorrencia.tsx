@@ -16,7 +16,7 @@ import { especColors } from "../styles/especColors"
 
 //Regra de negócio
 import { Out } from '../utils/Out';
-import { atualizaDados, transfereHospital } from '../utils/crud'
+import { atualizaDados, getInfo, transfereHospital } from '../utils/crud'
 import { dateFormat } from '../utils/firestoreDateFormats';
 import { OcorrenciaProps, VitimasProps } from '../componentes/CardOcorrencia';
 
@@ -42,32 +42,11 @@ export function Ocorrencia() {
   //Dados regra de negócio
   const [vetorOcorrencias, setVetorOcorrencias] = useState([]);
   const [vetorVitimas, setVetorVitimas] = useState([]);
+  const [NMHospital, setNMHhospital] = useState([]);
+
 
   const handleLogout = Out();
 
-  const navegarHome = () => {
-    navigation.navigate('home');
-  }
-
-  function timeStamp(ts: {}, altComp: number) {
-    setIsLoading(true);
-    if (altComp == 0) {
-      setExibeComponentes([0, 1, 0, 0, 0]);
-    } if (altComp == 1) {
-      setExibeComponentes([0, 0, 1, 0, 0]);
-    } if (altComp == 2) {
-      setExibeComponentes([0, 0, 0, 1, 0]);
-    } if (altComp == 3) {
-      setExibeComponentes([0, 0, 0, 0, 1]);
-    }
-
-    atualizaDados(idOcorrencia, ts, 'timeStamp()', 'IniciaOcorrencia')
-      .then((data: boolean) => {
-        if (data) {
-          setIsLoading(false);
-        }
-      })
-  }
   useEffect(() => {
     console.log('================ > Ocorrencia.tsx - useEffect');
   }, []);
@@ -82,6 +61,7 @@ export function Ocorrencia() {
           vtr: data.vtr,
           userLocal: data.userLocal,
           ocorrencia: data.ocorrencia,
+          hospital: data.hospital,
           dt_saida_base: dateFormat(data.ts_saida_base),
           dt_chegada_local: dateFormat(data.ts_chegada_local),
           dt_saida_local: dateFormat(data.ts_saida_local),
@@ -92,6 +72,11 @@ export function Ocorrencia() {
         }
         setVetorOcorrencias([dt]);
         setVetorVitimas([dt.vetorVitimas]);
+        getInfo('HOSPITAL', dt.hospital, 'getNMHospital')
+          .then((dt) => {
+            console.log(dt.nm_hospital)
+            setNMHhospital(dt.nm_hospital)
+          })
         setIsLoading(false);
       });
 
@@ -234,11 +219,15 @@ export function Ocorrencia() {
                   )}
                 />
                 <VStack mt={1} mb={4} borderTopColor={colors.white} borderTopWidth={0.5}>
-                  <Text ml={2} mr={2} mt={2} w={'full'} color='white' fontSize="md" textAlign='left'><Notepad size={20} color='white' />Ocorrência: </Text>
+                  <Text ml={2} mr={2} mt={2} w={'full'} color='white' fontSize="md" textAlign='left'><Notepad size={18} color='white' />Ocorrência: </Text>
                   <Text ml={2} mr={2} w={'full'} color='white' fontSize="md" textAlign='justify'>{vetorOcorrencias[0] && vetorOcorrencias[0].ocorrencia}</Text>
                 </VStack>
-
                 <VStack mt={1} mb={4} borderTopColor={colors.white} borderTopWidth={0.5}>
+                  <Text ml={2} mr={2} my={2} w={'full'} color='white' fontSize="md" textAlign='left'>
+                    <Buildings size={18} color='white' />Hospital: {NMHospital}
+                  </Text>
+                </VStack>
+                <VStack mt={1} mb={4}borderTopColor={colors.white} borderTopWidth={0.5}>
                   <Text ml={2} mr={2} my={2} w={'full'} color='white' fontSize="md" textAlign='left'>
                     <FirstAid size={18} color='white' />Vítimas:
                   </Text>

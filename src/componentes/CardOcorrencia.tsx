@@ -15,6 +15,7 @@ export type OcorrenciaProps = {
   vtr: string;
   userLocal?: string;
   ocorrencia?: string;
+  hospital?: string;
   dt_saida_base?: string;
   dt_chegada_local?: string;
   dt_saida_local?: string;

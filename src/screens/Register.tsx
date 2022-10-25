@@ -103,7 +103,7 @@ export function Register() {
   useEffect(() => {
     Geolocation.getCurrentPosition(info => {
       console.log(info.coords)
-      setOrigem('[' + [info.coords.longitude, info.coords.latitude] + ']')
+      setOrigem('[' + [info.coords.longitude+','+info.coords.latitude] + ']')
     });
   }, []);
 

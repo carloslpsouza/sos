@@ -98,6 +98,7 @@ export function FinalizaOcorrencia() {
                transfereHospital(dt.vetorVitimas, { status: 'open', vtr: dt.vtr, ocorrencia: idOcorrencia, hospital: hospitalId, created_at: firestore.FieldValue.serverTimestamp() }, 'FinalizaOcorrencia.tsx - useEffect ======================', 'Tranfere data')
                 .then((data: any) => {
                   console.log(data)
+                  timeStamp({ 'hospital': hospitalId }, -1)
                 })
                 console.log('gravaria');               
             }

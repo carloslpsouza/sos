@@ -15,7 +15,7 @@ import { especColors } from '../styles/especColors';
 
 //Regra de negócio
 import { Out } from '../utils/Out';
-//import { getMinhasOcorrencias, getOcorrenciaSnap } from '../utils/crud';
+import { getInfo } from '../utils/crud';
 import { Ocorrencia, OcorrenciaProps } from '../componentes/CardOcorrencia';
 import { dateFormat } from '../utils/firestoreDateFormats';
 
@@ -33,6 +33,7 @@ export function Home() {
   const [vtr, setVtr] = useState('');
   const userLocal = auth().currentUser.email;
   const [vetorOcorrencias, setVetorOcorrencias] = useState<OcorrenciaProps[]>([]);
+  const [hospital, setHospital] = useState({});
 
   //controle exibição componentes
   const [formViatura, setFormViatura] = useState(false);
@@ -45,7 +46,7 @@ export function Home() {
     navigation.navigate('iniciaOcorrencia', { idOcorrencia })
   }
 
-  const navegarDetalheOcorrencia = (idOcorrencia: string)=>{
+  const navegarDetalheOcorrencia = (idOcorrencia: string) => {
     navigation.navigate('ocorrencia', { idOcorrencia })
   }
 
@@ -109,9 +110,10 @@ export function Home() {
             vetorVitimas
           }
 
-        });
-
+        })
+        console.log(data)        
         setVetorOcorrencias(data)
+        setIsLoading(false)
       }, ((error) => console.error(error)));
     return false;
   }
@@ -121,6 +123,7 @@ export function Home() {
   }, []);
 
   useEffect(() => {
+    setIsLoading(true);
     getMinhasOcorrencias()
   }, []);
 
@@ -133,7 +136,9 @@ export function Home() {
           onPress={handleLogout}
         />
       </HStack>
-      <KeyboardAvoidingView
+      {
+        isLoading ? <Loading/> :
+        <KeyboardAvoidingView
         behavior="height"
         style={{ flex: 1 }}
         bg={especColors.coresPadrao.bg0}
@@ -166,6 +171,7 @@ export function Home() {
           }
         </ScrollView>
       </KeyboardAvoidingView>
+      }
       {
         formViatura ?
           <Button title="Gravar" m={5} px={5} onPress={gravaViatura} /> :
