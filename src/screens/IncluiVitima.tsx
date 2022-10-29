@@ -121,7 +121,7 @@ export function IncluiVitima() {
     } if (altComp == 2) {
       setExibeComponentes([0, 0, 0, 1]);
     }
-    atualizaDados(idOcorrencia, ts, 'gravaDados()', 'Saída da base')
+    atualizaDados('OCORRENCIA', idOcorrencia, ts, 'gravaDados()', 'Saída da base')
       .then((data: boolean) => {
         if (data) {
           setIsLoading(false);
@@ -314,7 +314,7 @@ export function IncluiVitima() {
   }
 
   return (
-    <VStack flex={1} pb={1} bg="#565656">
+    <VStack flex={1} pb={1} bg={especColors.coresPadrao.bg0}>
       <HStack w="full" justifyContent="space-between" alignItems="center" bg="#FFFAF0" pt={1} pb={1} px={2}>
         <Logo />
         <IconButton

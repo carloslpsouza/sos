@@ -1,7 +1,7 @@
 import { ScrollView } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { FlatList, Heading, HStack, IconButton, KeyboardAvoidingView, useTheme, VStack, Text, Center } from 'native-base';
-import { Buildings, FirstAid, MapPinLine, Notepad, PersonSimpleRun, SignOut, Truck } from 'phosphor-react-native';
+import { Buildings, FirstAid, ListChecks, MapPinLine, Notepad, PersonSimpleRun, SignOut, Truck } from 'phosphor-react-native';
 import { useNavigation, useRoute } from '@react-navigation/native'
 import firestore from '@react-native-firebase/firestore';
 
@@ -19,6 +19,7 @@ import { Out } from '../utils/Out';
 import { atualizaDados, getInfo, transfereHospital } from '../utils/crud'
 import { dateFormat } from '../utils/firestoreDateFormats';
 import { OcorrenciaProps, VitimasProps } from '../componentes/CardOcorrencia';
+import { HospitalProps } from '../componentes/Hospital';
 
 type RouteParams = { // Essa tipagem foi criada apenas para que o auto complite pudesse achar esse paramentro (Testar sem)
   idOcorrencia?: string,
@@ -73,9 +74,9 @@ export function Ocorrencia() {
         setVetorOcorrencias([dt]);
         setVetorVitimas([dt.vetorVitimas]);
         getInfo('HOSPITAL', dt.hospital, 'getNMHospital')
-          .then((dt) => {
+          .then((dt: HospitalProps) => {
             console.log(dt.nm_hospital)
-            setNMHhospital(dt.nm_hospital)
+            setNMHhospital([dt.nm_hospital])
           })
         setIsLoading(false);
       });
@@ -88,8 +89,8 @@ export function Ocorrencia() {
   }, [exibeComponentes]);
 
   return (
-    <VStack flex={1} pb={1} bg="#565656">
-      <HStack w="full" justifyContent="space-between" alignItems="center" bg="#FFFAF0" pt={1} pb={1} px={2}>
+    <VStack flex={1} pb={1} bg={especColors.coresPadrao.bg0}>
+      <HStack pt={1} pb={1} w="full" justifyContent="space-between" alignItems="center" bg={especColors.coresPadrao.head0}>
         <Logo />
         <IconButton
           icon={<SignOut size={26} color={colors.black} />}
@@ -98,8 +99,8 @@ export function Ocorrencia() {
       </HStack>
       {
         isLoading ? <Loading /> :
-          <VStack flex={1} px={6} alignItems="center">
-            <Heading fontSize={16} mt={5} color="#fff">
+          <VStack flex={1} px={2}>
+            <Heading fontSize={16} my={5} color={especColors.coresPadrao.textCard1} textAlign="center">
               {titulo} {vetorOcorrencias[0] ? vetorOcorrencias[0].vtr.toString().toUpperCase() : <Loading />}
             </Heading>
             <KeyboardAvoidingView
@@ -112,101 +113,54 @@ export function Ocorrencia() {
                   data={vetorOcorrencias}
                   keyExtractor={item => item.id}
                   renderItem={({ item }) => (
-                    <>
-                      <VStack flex={1}
-                        bg="#FFFAF0"
-                        mt={2}
-                        mb={2}
-                        height={16}
-                        alignItems="center"
-                        justifyContent="space-between"
-                        rounded="sm"
-                        overflow="hidden">
-                        <HStack p={5} pl={2}>
-                          <PersonSimpleRun size={26} color={colors.black} />
-                          <Text color="black" fontSize="md">Saída Base: {item.dt_saida_base}</Text>
+                    <VStack
+                      flex={1}
+                      px={2}
+                      m={1}
+                      rounded="sm"
+                      shadow={'9'}
+                      bg={especColors.coresPadrao.bg1}
+                    >
+                      <VStack>
+                        <HStack mb={3}>
+                          <ListChecks size={26} color={especColors.coresPadrao.textCard1} />
+                          <Text ml={2} color={especColors.coresPadrao.textCard1} fontSize="md">Checkpoints da ocorrência</Text>
                         </HStack>
-                      </VStack>
-                      <VStack flex={1}
-                        bg="#FFFAF0"
-                        mt={2}
-                        mb={2}
-                        height={16}
-                        alignItems="center"
-                        justifyContent="space-between"
-                        rounded="sm"
-                        overflow="hidden">
-                        <HStack p={5} pl={2}>
-                          <MapPinLine size={26} color={colors.black} />
-                          <Text color="black" fontSize="md">Chegada local: {item.dt_chegada_local}</Text>
+                        <HStack mb={3}>
+                          <PersonSimpleRun size={26} color={especColors.coresPadrao.textCard1} />
+                          <Text ml={2} color={especColors.coresPadrao.textCard1} fontSize="md" textAlign={'justify'}>Saída Base: {item.dt_saida_base}</Text>
+                        </HStack>
+                        <HStack mb={3}>
+                          <MapPinLine size={26} color={especColors.coresPadrao.textCard1} />
+                          <Text ml={2} color={especColors.coresPadrao.textCard1} fontSize="md">Chegada local: {item.dt_chegada_local}</Text>
                         </HStack>
                       </VStack>
                       {
                         item.dt_saida_local != undefined &&
-                        <VStack flex={1}
-                          bg="#FFFAF0"
-                          mt={2}
-                          mb={2}
-                          height={16}
-                          alignItems="center"
-                          justifyContent="space-between"
-                          rounded="sm"
-                          overflow="hidden">
-                          <HStack p={5} pl={2}>
-                            <Truck size={26} color={colors.black} />
-                            <Text color="black" fontSize="md">Saída ocorrência: {item.dt_saida_local}</Text>
-                          </HStack>
-                        </VStack>
+                        <HStack mb={3}>
+                          <Truck size={26} color={especColors.coresPadrao.textCard1} />
+                          <Text ml={2} color={especColors.coresPadrao.textCard1} fontSize="md">Saída ocorrência: {item.dt_saida_local}</Text>
+                        </HStack>
                       }{
                         item.dt_chegada_hospital != undefined &&
-                        <VStack flex={1}
-                          bg="#FFFAF0"
-                          mt={2}
-                          mb={2}
-                          height={16}
-                          alignItems="center"
-                          justifyContent="space-between"
-                          rounded="sm"
-                          overflow="hidden">
-                          <HStack p={5} pl={1}>
-                            <Buildings size={26} color={colors.black} />
-                            <Text color="black" fontSize="md">Chegada hospital: {item.dt_chegada_hospital}</Text>
-                          </HStack>
-                        </VStack>
+                        <HStack mb={3}>
+                          <Buildings size={26} color={especColors.coresPadrao.textCard1} />
+                          <Text ml={2} color={especColors.coresPadrao.textCard1} fontSize="md">Chegada hospital: {item.dt_chegada_hospital}</Text>
+                        </HStack>
                       }{
                         item.dt_saida_hospital != undefined &&
-                        <VStack flex={1}
-                          bg="#FFFAF0"
-                          mt={2}
-                          mb={2}
-                          height={16}
-                          alignItems="center"
-                          justifyContent="space-between"
-                          rounded="sm"
-                          overflow="hidden">
-                          <HStack p={5} pl={1}>
-                            <Buildings size={26} color={colors.black} />
-                            <Text color="black" fontSize="md">Saída hospital: {item.dt_saida_hospital}</Text>
-                          </HStack>
-                        </VStack>
+                        <HStack mb={3}>
+                          <Truck size={26} color={especColors.coresPadrao.textCard1} mirrored/>
+                          <Text ml={2} color={especColors.coresPadrao.textCard1} fontSize="md">Saída hospital: {item.dt_saida_hospital}</Text>
+                        </HStack>
                       }{
                         item.dt_retorno_base != undefined &&
-                        <VStack flex={1}
-                          bg="#FFFAF0"
-                          mt={2}
-                          mb={2}
-                          height={16}
-                          alignItems="center"
-                          justifyContent="space-between"
-                          rounded="sm"
-                          overflow="hidden">
-                          <HStack p={5} pl={1}>
-                            <Buildings size={26} color={colors.black} />
-                            <Text color="black" fontSize="md">Retorno à base: {item.dt_retorno_base}</Text>
-                          </HStack>
-                        </VStack>
+                        <HStack mb={3}>
+                          <Buildings size={26} color={especColors.coresPadrao.textCard1} />
+                          <Text ml={2} color={especColors.coresPadrao.textCard1} fontSize="md">Retorno à base: {item.dt_retorno_base}</Text>
+                        </HStack>
                       }
-                    </>
+                    </VStack>
                   )}
                   showsHorizontalScrollIndicator={false}
                   contentContainerStyle={{ paddingBottom: 10 }}
@@ -218,33 +172,48 @@ export function Ocorrencia() {
                     </Center>
                   )}
                 />
-                <VStack mt={1} mb={4} borderTopColor={colors.white} borderTopWidth={0.5}>
-                  <Text ml={2} mr={2} mt={2} w={'full'} color='white' fontSize="md" textAlign='left'><Notepad size={18} color='white' />Ocorrência: </Text>
-                  <Text ml={2} mr={2} w={'full'} color='white' fontSize="md" textAlign='justify'>{vetorOcorrencias[0] && vetorOcorrencias[0].ocorrencia}</Text>
-                </VStack>
-                <VStack mt={1} mb={4} borderTopColor={colors.white} borderTopWidth={0.5}>
-                  <Text ml={2} mr={2} my={2} w={'full'} color='white' fontSize="md" textAlign='left'>
-                    <Buildings size={18} color='white' />Hospital: {NMHospital}
-                  </Text>
-                </VStack>
-                <VStack mt={1} mb={4}borderTopColor={colors.white} borderTopWidth={0.5}>
-                  <Text ml={2} mr={2} my={2} w={'full'} color='white' fontSize="md" textAlign='left'>
-                    <FirstAid size={18} color='white' />Vítimas:
-                  </Text>
-                  <FlatList
-                    data={vetorVitimas[0]}
-                    renderItem={({ item }) => <Order data={item} onPress={() => null} />}
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={{ paddingBottom: 50 }}
-                    ListEmptyComponent={() => (
-                      <Center>
-                        <Text color="#fff" fontSize="xl" mt={6} textAlign="center">
-                          0 Pacientes {'\n'}
+                <VStack>
+                  <VStack py={2} borderTopColor={especColors.coresPadrao.textCard1} borderTopWidth={'1'}>
+                    <Text color={especColors.coresPadrao.textCard1} fontSize="md" textAlign='left'>
+                      <Notepad size={18} color={especColors.coresPadrao.textCard1} /> Ocorrência:
+                    </Text>
+                    <Text m={2} w={'full'} color={especColors.coresPadrao.textCard1} fontSize="md" textAlign='justify'>
+                      {vetorOcorrencias[0] && vetorOcorrencias[0].ocorrencia}
+                    </Text>
+                  </VStack>
+                  <VStack
+                    flex={1}
+                    px={2}
+                    m={1}
+                    rounded="sm"
+                    shadow={'9'}
+                    bg={especColors.coresPadrao.bg1}
+                  >
+                    <Text ml={0} mr={1} my={2} w={'full'} borderRadius={5} color={especColors.coresPadrao.textCard1} fontSize="md" textAlign='left'>
+                      <Buildings size={18} color={especColors.coresPadrao.textCard1} /> Hospital:  {NMHospital}
+                    </Text>
+                  </VStack>
+                  <VStack py={2} borderTopColor={especColors.coresPadrao.textCard1} borderTopWidth={'1'}>
+                    <Text ml={0} mr={1} my={2} w={'full'} borderRadius={5} color={especColors.coresPadrao.textCard1} fontSize="md" textAlign='left'>
+                      <FirstAid size={18} color={especColors.coresPadrao.textCard1} /> Vítimas:
+                    </Text>
+                    <FlatList
+                      mx={2}
+                      shadow={'10'}
+                      data={vetorVitimas[0]}
+                      renderItem={({ item }) => <Order data={item} onPress={() => null} />}
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={{ paddingBottom: 10 }}
+                      ListEmptyComponent={() => (
+                        <Center>
+                          <Text color="#fff" fontSize="xl" mt={6} textAlign="center">
+                            0 Pacientes {'\n'}
 
-                        </Text>
-                      </Center>
-                    )}
-                  />
+                          </Text>
+                        </Center>
+                      )}
+                    />
+                  </VStack>
                 </VStack>
               </ScrollView>
 

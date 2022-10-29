@@ -17,9 +17,10 @@ export function Order({ data, ...rest }) {
 
   return (
     <Pressable {...rest}>
-      {console.log(data)}
+      {/* console.log(data) */}
       <HStack
-        bg={especColors.coresPadrao.card0}
+        bg={especColors.coresPadrao.card1}
+        shadow={'9'}
         mb={4}
         alignItems="center"
         justifyContent="space-between"
@@ -29,7 +30,7 @@ export function Order({ data, ...rest }) {
         <Box h="full" w={4} bg={risco(data.sinaisVitais.risco).cor} />
 
         <VStack flex={1} my={5} ml={2}>
-          <Text color="black" fontSize="md">
+          <Text color={especColors.coresPadrao.textCard1} fontSize="md">
             Nome: {data.dadosPessoais.nmPaciente}
           </Text>
           {
@@ -37,13 +38,13 @@ export function Order({ data, ...rest }) {
             <>
               {
                 data.dadosPessoais.telefone != "" &&
-                <Text color="black" fontSize="md">
+                <Text color={especColors.coresPadrao.textCard1} fontSize="md">
                   Telefone: {data.dadosPessoais.telefone}
                 </Text>
               }
               {
                 data.dadosPessoais.cpf != "" &&
-                <Text color="black" fontSize="xs">
+                <Text color={especColors.coresPadrao.textCard1} fontSize="xs">
                   CPF: {data.dadosPessoais.cpf}
                 </Text>
               }
@@ -53,20 +54,20 @@ export function Order({ data, ...rest }) {
           }
 
           <HStack alignItems="center">
-            <Notepad size={15} color={colors.gray[700]} />
-            <Text color="black" fontSize="xs" ml={5}>
+            <Notepad size={15} color={especColors.coresPadrao.textCard1} />
+            <Text color={especColors.coresPadrao.textCard1} fontSize="xs" ml={5}>
               Freq: {data.sinaisVitais.frequencia}
             </Text>
-            <Text color="black" fontSize="xs" ml={5}>
+            <Text color={especColors.coresPadrao.textCard1} fontSize="xs" ml={5}>
               Pressão: {data.sinaisVitais.pressao}
             </Text>
-            <Text color="black" fontSize="xs" ml={5}>
+            <Text color={especColors.coresPadrao.textCard1} fontSize="xs" ml={5}>
               Sat: {data.sinaisVitais.saturacao}
             </Text>
           </HStack>
           <HStack alignItems="center">
-            <FirstAid size={15} color={colors.gray[700]} />
-            <Text color="gray.700" fontSize="xs" ml={1}>
+            <FirstAid size={15} color={especColors.coresPadrao.textCard1} />
+            <Text color={especColors.coresPadrao.textCard1} fontSize="xs" ml={1}>
               {risco(data.sinaisVitais.risco).msg}
             </Text>
           </HStack>

@@ -73,7 +73,7 @@ export function Home() {
       'vtr': vtr,
       'userLocal': userLocal
     }
-    console.log(data);
+    //console.log(data);
     gravaDados('OCORRENCIA', data, 'navegaViatura - home.tsx', 'VTR OU EQUIPE')
   }
   function navegaViatura() {
@@ -111,7 +111,7 @@ export function Home() {
           }
 
         })
-        console.log(data)        
+        //console.log(data)        
         setVetorOcorrencias(data)
         setIsLoading(false)
       }, ((error) => console.error(error)));
@@ -128,8 +128,8 @@ export function Home() {
   }, []);
 
   return (
-    <VStack flex={1} pb={1} bg="#565656">
-      <HStack w="full" justifyContent="space-between" alignItems="center" bg="#FFFAF0" pt={1} pb={1} px={2}>
+    <VStack flex={1} pb={1} bg={especColors.coresPadrao.bg0}>
+      <HStack w="full" justifyContent="space-between" alignItems="center" bg={especColors.coresPadrao.head0} pt={1} pb={1}>
         <Logo />
         <IconButton
           icon={<SignOut size={26} color={colors.black} />}
@@ -154,9 +154,6 @@ export function Home() {
               <Input color={colors.white} placeholder="Equipe ou VTR" m={5} onChangeText={(text) => { setVtr(text) }} />
               :
               <FlatList
-                m={2}
-                ml={5}
-                mr={5}
                 data={vetorOcorrencias}
                 keyExtractor={item => item.id}
                 renderItem={({ item }) => <Ocorrencia data={item} onPress={() => navegarDetalheOcorrencia(item.id)} />}
@@ -164,7 +161,7 @@ export function Home() {
                 contentContainerStyle={{ paddingBottom: 50 }}
                 ListEmptyComponent={() => (
                   <Center>
-                    <Text color={colors.white}>Ainda não existem ocorrências</Text>
+                    <Text color={especColors.coresPadrao.textCard1}>Ainda não existem ocorrências</Text>
                   </Center>
                 )}
               />
@@ -174,8 +171,8 @@ export function Home() {
       }
       {
         formViatura ?
-          <Button title="Gravar" m={5} px={5} onPress={gravaViatura} /> :
-          <Button title="Nova Ocorrência" m={5} px={5} onPress={navegaViatura} />
+          <Button shadow={'9'} title="Gravar" m={5} px={5} onPress={gravaViatura} /> :
+          <Button shadow={'9'} title="Nova Ocorrência" m={5} px={5} onPress={navegaViatura} />
       }
 
     </VStack>
