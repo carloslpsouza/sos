@@ -120,11 +120,14 @@ export function FinalizaOcorrencia() {
                   timeStamp({ 'hospital': hospitalId }, -1)
                 })
             } else {
-              querySnapshot.forEach((doc) => {
-                idAtendimento.push(doc.id);
-                console.log("ID do atendimento: " + doc.id);
+              if (!trava) {
+                querySnapshot.forEach((doc) => {
+                  idAtendimento.push(doc.id);
+                  console.log("ID do atendimento: " + doc.id);
 
-              })
+                })
+              }
+              setTrava(true);
             }
             //console.log(idAtendimento);
           })
