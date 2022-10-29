@@ -1,11 +1,9 @@
 import { Alert, FlatList, Linking, Platform, ScrollView } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { Heading, HStack, IconButton, KeyboardAvoidingView, useTheme, VStack, Text, FormControl, Select, Center, Box, Input, Radio } from 'native-base';
-import { FirstAid, MapPinLine, Notepad, PersonSimpleRun, SignOut, Truck } from 'phosphor-react-native';
+import { SignOut } from 'phosphor-react-native';
 import { useNavigation, useRoute } from '@react-navigation/native'
 import firestore from '@react-native-firebase/firestore';
-import Geolocation from '@react-native-community/geolocation';
-import { Hourglass } from 'phosphor-react-native';
 
 //Componentes
 import { Button } from '../componentes/Button';
@@ -78,12 +76,22 @@ export function IncluiVitima() {
           onPress: () => {
             setOcDados(true);
             exibeRegVitimas();
+            setnmPaciente('');
+            setCpf('');
+            setTelefone('');
+            setPressao('');
+            setFrequencia('');
+            setSaturacao('');
+            setObservacoes('');
+            setCorRisco(especColors.risco.naoUrgencia);
+            setRisco(1);
           }
         },
         {
           text: "Não",
           onPress: () => {
             gravaDados({ vetorVitimas }, 0)
+
           }
         },
       ]
@@ -305,14 +313,6 @@ export function IncluiVitima() {
     if (!risco) { setCorRisco(colors.white) }
   }, [risco]);
 
-  const riscoPadrao = (par: number) => {
-    if (par === 1) { return { 'cor': especColors.risco.naoUrgencia, 'msg': msg.risco.naoUrgencia }; }
-    if (par === 2) { return { 'cor': especColors.risco.poucaUrgencia, 'msg': msg.risco.poucaUrgencia }; }
-    if (par === 3) { return { 'cor': especColors.risco.urgencia, 'msg': msg.risco.urgencia }; }
-    if (par === 4) { return { 'cor': especColors.risco.muitaUrgencia, 'msg': msg.risco.muitaUrgencia }; }
-    if (par === 5) { return { 'cor': especColors.risco.emergencia, 'msg': msg.risco.emergencia }; }
-  }
-
   return (
     <VStack flex={1} pb={1} bg={especColors.coresPadrao.bg0}>
       <HStack w="full" justifyContent="space-between" alignItems="center" bg="#FFFAF0" pt={1} pb={1} px={2}>
@@ -337,20 +337,20 @@ export function IncluiVitima() {
                 <VStack w={'full'}>
                   {
                     exibeComponentes[1] == 1 || exibeComponentes[2] == 1 || exibeComponentes[3] == 1 ?
-                    <FlatList
-                    data={vetorVitimasTemp}
-                    renderItem={({ item }) => <Order data={item} onPress={() => null} />}
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={{ paddingBottom: 50 }}
-                    ListEmptyComponent={() => (
-                      <Center>
-                        <Text color="#fff" fontSize="xl" mt={6} textAlign="center">
-                          0 Pacientes {'\n'}
+                      <FlatList
+                        data={vetorVitimasTemp}
+                        renderItem={({ item }) => <Order data={item} onPress={() => null} />}
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={{ paddingBottom: 50 }}
+                        ListEmptyComponent={() => (
+                          <Center>
+                            <Text color="#fff" fontSize="xl" mt={6} textAlign="center">
+                              0 Pacientes {'\n'}
 
-                        </Text>
-                      </Center>
-                    )}
-                  /> :
+                            </Text>
+                          </Center>
+                        )}
+                      /> :
                       null
                   }
                   {
@@ -385,9 +385,9 @@ export function IncluiVitima() {
               exibeComponentes[1] == 1 &&
               <Button title='Selecionar Hospital' mb={5} w={'full'}
                 onPress={() => { navegarSelectHospital(idOcorrencia) }}
-                //onPress={() => gravaDados({ 'ts_saida_local': firestore.FieldValue.serverTimestamp() }, null)}
+              //onPress={() => gravaDados({ 'ts_saida_local': firestore.FieldValue.serverTimestamp() }, null)}
               />
-            }  
+            }
           </VStack>
       }
     </VStack>

@@ -41,8 +41,8 @@ export function FinalizaOcorrencia() {
 
   //Dados regra de negócio
   const [vetorOcorrencias, setVetorOcorrencias] = useState([]);
-  const [trava, setTrava] = useState(true);
   const [idAtendimento, setIdAtendimento] = useState([]);
+  let trava = true;
 
   const handleLogout = Out();
 
@@ -113,23 +113,26 @@ export function FinalizaOcorrencia() {
 
             console.log("Documento vazio? " + querySnapshot.empty.valueOf());
             if (querySnapshot.empty.valueOf()) {
+              trava = false;
               transfereHospital(dt.vetorVitimas, { status: 'open', vtr: dt.vtr, ocorrencia: idOcorrencia, hospital: hospitalId, created_at: firestore.FieldValue.serverTimestamp() }, 'FinalizaOcorrencia.tsx - useEffect ======================', 'Tranfere data')
                 .then((data: any) => {
                   //console.log(data)
                   console.log('Gravou chegada Hospital');
                   timeStamp({ 'hospital': hospitalId }, -1)
                 })
-            } else {
+            }else{
               if (!trava) {
                 querySnapshot.forEach((doc) => {
+                  
                   idAtendimento.push(doc.id);
                   console.log("ID do atendimento: " + doc.id);
-
-                })
-              }
-              setTrava(true);
+                }); 
+                trava = true;               
+              } 
             }
-            //console.log(idAtendimento);
+            console.log("Travado? " + trava);
+            console.log("Array de atendimentos: ");
+            console.log(idAtendimento);
           })
           .catch((error) => {
             console.log("Error getting documents: ", error);
