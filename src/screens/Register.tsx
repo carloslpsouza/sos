@@ -22,6 +22,7 @@ import { Hospital, HospitalProps } from '../componentes/Hospital';
 type RouteParams = { // Essa tipagem foi criada apenas para que o auto complite pudesse achar esse paramentro (Testar sem)
   hospitalId: string; //Erro de tipo não pode ser und (Consultar navigation.d.ts)
   idOcorrencia?: string;
+  em_aberto: string;
 }
 
 export function Register() {
@@ -43,7 +44,7 @@ export function Register() {
   const route = useRoute();
 
   //informações vindas de Incluivitima.tsx (Typagem logo após os imports Linha 15)
-  const { hospitalId, idOcorrencia } = route.params as RouteParams; // o route.params não sabe qual é então foi criada a tipagem acima
+  const { hospitalId, idOcorrencia, em_aberto } = route.params as RouteParams; // o route.params não sabe qual é então foi criada a tipagem acima
 
   const handleLogout = Out();
 
@@ -61,14 +62,16 @@ export function Register() {
         console.log('Status:', this.status);
         let temp = this.responseText;
         let temp1 = JSON.parse(temp);
-        console.log(temp1.routes[0].summary);
-        setDistancia((temp1.routes[0].summary.distance));
-        //setTempo(temp1.routes[0].summary.duration);
-        let tst = 600;
-        if (tst > 6000) {
-          setTempo({ 'temp': (temp1.routes[0].summary.duration) / 60, 'tipo': 'horas' })
-        } else {
-          setTempo({ 'temp': (temp1.routes[0].summary.duration) / 60, 'tipo': 'min' })
+        if (temp1.routes) {
+          console.log(temp1.routes[0].summary);
+          setDistancia((temp1.routes[0].summary.distance));
+          //setTempo(temp1.routes[0].summary.duration);
+          let tst = 600;
+          if (tst > 6000) {
+            setTempo({ 'temp': (temp1.routes[0].summary.duration) / 60, 'tipo': 'horas' })
+          } else {
+            setTempo({ 'temp': (temp1.routes[0].summary.duration) / 60, 'tipo': 'min' })
+          }
         }
       }
     };
@@ -103,7 +106,7 @@ export function Register() {
   useEffect(() => {
     Geolocation.getCurrentPosition(info => {
       console.log(info.coords)
-      setOrigem('[' + [info.coords.longitude+','+info.coords.latitude] + ']')
+      setOrigem('[' + [info.coords.longitude + ',' + info.coords.latitude] + ']')
     });
   }, []);
 
@@ -162,28 +165,40 @@ export function Register() {
             Conduzir para Hospital
           </Text>
         </HStack>
-        <VStack justifyContent="center" p={4} space={1} alignItems="center">
-        </VStack>
-        <VStack w='full' bg={especColors.coresPadrao.bg1} space={1} alignItems="center">
+        <VStack
+          flex={1}
+          px={1.5}
+          m={4}
+          rounded="sm"
+          shadow={'9'}
+          h={'48'}
+          bg={especColors.coresPadrao.bg1}
+          space={4}
+          alignItems="center"
+        >
           <Heading>
             <Text
               textAlign='center'
               fontSize="sm"
               ml={2}
               textTransform="uppercase"
-              color={colors.white} >
+              color={especColors.coresPadrao.textCard1} >
               {hospital ? hospital.nm_hospital : isLoading}
             </Text>
           </Heading>
           {
             hospital ?
               <>
-                <Hospital dataHospital={hospital} w='full' px={2} />
-                <Text color={colors.white}>Distância: {distancia ? (Number(distancia) / 1000).toFixed(2) + "km" : <Text>Carregando...</Text>} </Text>
-                <Text color={colors.white}>Tempo para chegada: {tempo ? (tempo.temp).toFixed(2) + " " + tempo.tipo + "\n" : <Text>Carregando...</Text>}</Text>
+                <VStack>
+                  <Text color={especColors.coresPadrao.textCard1} fontSize="md" textAlign={"center"}>Cidade: {hospital.cidade}</Text>
+                  <Text color={especColors.coresPadrao.textCard1} fontSize="md" textAlign={"center"}>Bairro: {hospital.bairro}</Text>
+                  <Text color={especColors.coresPadrao.textCard1} fontSize="md" textAlign={"center"}>Lotação: {em_aberto} de {hospital.lotacao} </Text>
+                  <Text color={especColors.coresPadrao.textCard1} fontSize="md" textAlign={"center"}>Distância: {distancia ? (Number(distancia) / 1000).toFixed(2) + "km" : <Text>Carregando...</Text>} </Text>
+                  <Text color={especColors.coresPadrao.textCard1} fontSize="md" textAlign={"center"}>Tempo para chegada: {tempo ? (tempo.temp).toFixed(2) + " " + tempo.tipo + "\n" : <Text>Carregando...</Text>}</Text>
+                </VStack>
               </>
               :
-              <Text>Carregando...</Text>
+              <Text color={especColors.coresPadrao.textCard1} fontSize="md" textAlign={"center"}>Carregando...</Text>
           }
         </VStack>
       </ScrollView>
@@ -195,8 +210,8 @@ export function Register() {
           pt={1}
           pb={1}
           px={2}>
-          <Button title='Não' m={1} w='2/5' />
-          <Button title='Sim' m={1} w='2/5' onPress={() => { openGps(Hlat, Hlon, hospital.URL), pagResOcorrencia() }} />
+          <Button shadow={'9'} title='Não' m={1} w='2/5' onPress={() => { navigation.goBack() }} />
+          <Button shadow={'9'} title='Sim' m={1} w='2/5' onPress={() => { openGps(Hlat, Hlon, hospital.URL), pagResOcorrencia() }} />
         </HStack>
       </VStack>
     </KeyboardAvoidingView>

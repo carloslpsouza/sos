@@ -102,14 +102,14 @@ export function getMinhasOcorrencias(user: string) {
   });
 }
 
-export function atualizaDados(IDDOC: string, DATA: any, SOLICITANTE?: string, MSG?: string) {
+export function atualizaDados(COLLECTION: string, IDDOC: string, DATA: any, SOLICITANTE?: string, MSG?: string) {
   console.log("Parametros: " + IDDOC, SOLICITANTE, DATA);
 
   return new Promise((resolve, reject) => {
     if (!DATA) {
       return Alert.alert(MSG, 'Verifique os campos e tente novamente');
     }
-    firestore().collection('OCORRENCIA').doc(IDDOC)
+    firestore().collection(COLLECTION).doc(IDDOC)
       .update(
         DATA
       )
@@ -155,8 +155,9 @@ function sinaisVitais(idPaciente: string, DATA: any, DATAOCORRENCIA: any) {
         ...DATA.sinaisVitais,
         ...DATAOCORRENCIA
       }) //ver como unir o ID com o resto do objeto json
-      .then(() => {
+      .then((docRef) => {
         console.log('Entrada', 'Registrado com sucesso!');
+        resolve(docRef.id);        
       })
       .catch((error) => {
         console.log(error);
@@ -172,7 +173,10 @@ function dadosPessoais(DATA: any, DATAOCORRENCIA: any) {
       .collection('PACIENTE')
       .add(DATA.dadosPessoais)
       .then((docRef) => { //docRef retorna LastInsertID
-        sinaisVitais(docRef.id, DATA, DATAOCORRENCIA)
+        sinaisVitais(docRef.id, DATA, DATAOCORRENCIA),
+        (data)=>{
+          return data
+        }
       })
       .catch((error) => {
         console.log(error);
@@ -187,6 +191,8 @@ export function transfereHospital(DATA: any, DATAOCORRENCIA: any, SOLICITANTE?: 
 
   return new Promise((resolve, reject) => {
     DATA.forEach((DATA) => { dadosPessoais(DATA, DATAOCORRENCIA) })
-    resolve(true)
+    resolve((data)=>{
+      resolve(true)
+    })
   })
 }

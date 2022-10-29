@@ -42,6 +42,7 @@ export function FinalizaOcorrencia() {
   //Dados regra de negócio
   const [vetorOcorrencias, setVetorOcorrencias] = useState([]);
   const [trava, setTrava] = useState(true);
+  const [idAtendimento, setIdAtendimento] = useState([]);
 
   const handleLogout = Out();
 
@@ -61,20 +62,34 @@ export function FinalizaOcorrencia() {
       setExibeComponentes([0, 0, 0, 0, 1]);
     }
 
-    atualizaDados(idOcorrencia, ts, 'timeStamp()', 'IniciaOcorrencia')
+    atualizaDados('OCORRENCIA', idOcorrencia, ts, 'timeStamp()', 'IniciaOcorrencia')
       .then((data: boolean) => {
         if (data) {
           setIsLoading(false);
         }
       })
   }
+
+  function chegadaHospital() {
+    timeStamp({ 'ts_chegada_hospital': firestore.FieldValue.serverTimestamp() }, 1)
+    idAtendimento.forEach((data) => {
+      atualizaDados('ATENDIMENTO', data, { noHospital: 1 }, 'timeStamp()', 'IniciaOcorrencia')
+        .then((data: any) => {
+          if (data) {
+            //console.log(data);
+            setIsLoading(false);
+          }
+        })
+    })
+  }
+
   useEffect(() => {
     console.log('================ > FinalizaOcorrencia.tsx - useEffect');
   }, []);
 
   useEffect(() => {
     setIsLoading(true);
-    console.log(idOcorrencia);
+    console.log("ID da Ocorrência: " + idOcorrencia);
     firestore().collection('OCORRENCIA').doc(idOcorrencia)
       .onSnapshot((doc) => {
         const data = doc.data();
@@ -91,18 +106,31 @@ export function FinalizaOcorrencia() {
           vetorVitimas: data.vetorVitimas
         }
         setVetorOcorrencias([dt]);
+        console.log('useEffect busca ocorrencia');
         firestore().collection('ATENDIMENTO')
-          .where('ocorrencia', '==', idOcorrencia).get().then((doc) => {
-            console.log(doc.empty.valueOf());
-            if (doc.empty.valueOf()) {
-               transfereHospital(dt.vetorVitimas, { status: 'open', vtr: dt.vtr, ocorrencia: idOcorrencia, hospital: hospitalId, created_at: firestore.FieldValue.serverTimestamp() }, 'FinalizaOcorrencia.tsx - useEffect ======================', 'Tranfere data')
+          .where('ocorrencia', '==', idOcorrencia).get()
+          .then((querySnapshot) => {
+
+            console.log("Documento vazio? " + querySnapshot.empty.valueOf());
+            if (querySnapshot.empty.valueOf()) {
+              transfereHospital(dt.vetorVitimas, { status: 'open', vtr: dt.vtr, ocorrencia: idOcorrencia, hospital: hospitalId, created_at: firestore.FieldValue.serverTimestamp() }, 'FinalizaOcorrencia.tsx - useEffect ======================', 'Tranfere data')
                 .then((data: any) => {
-                  console.log(data)
+                  //console.log(data)
+                  console.log('Gravou chegada Hospital');
                   timeStamp({ 'hospital': hospitalId }, -1)
                 })
-                console.log('gravaria');               
+            } else {
+              querySnapshot.forEach((doc) => {
+                idAtendimento.push(doc.id);
+                console.log("ID do atendimento: " + doc.id);
+
+              })
             }
+            //console.log(idAtendimento);
           })
+          .catch((error) => {
+            console.log("Error getting documents: ", error);
+          });
 
         setIsLoading(false);
       });
@@ -115,7 +143,7 @@ export function FinalizaOcorrencia() {
   }, [exibeComponentes]);
 
   return (
-    <VStack flex={1} pb={1} bg="#565656">
+    <VStack flex={1} pb={1} bg={especColors.coresPadrao.bg0}>
       <HStack w="full" justifyContent="space-between" alignItems="center" bg="#FFFAF0" pt={1} pb={1} px={2}>
         <Logo />
         <IconButton
@@ -125,7 +153,7 @@ export function FinalizaOcorrencia() {
       </HStack>
       {
         isLoading ? <Loading /> :
-          <VStack flex={1} px={6} alignItems="center">
+          <VStack flex={1} px={4} alignItems="center">
             <Heading fontSize={16} mt={5} color="#fff">
               {titulo} {vetorOcorrencias[0] ? vetorOcorrencias[0].vtr.toString().toUpperCase() : <Loading />}
             </Heading>
@@ -260,7 +288,7 @@ export function FinalizaOcorrencia() {
             }{
               exibeComponentes[1] == 1 &&
               <Button title='Chegada ao Hospital' mb={5} w={'full'}
-                onPress={() => timeStamp({ 'ts_chegada_hospital': firestore.FieldValue.serverTimestamp() }, 1)}
+                onPress={() => chegadaHospital()}
               />
             }{
               exibeComponentes[2] == 1 &&

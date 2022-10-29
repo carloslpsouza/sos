@@ -7,10 +7,12 @@ import { SignOut } from 'phosphor-react-native';
 import { ChatTeardropText } from 'phosphor-react-native';
 
 import Logo from '../assets/Logo.svg';
-import { Hospital, HospitalProps } from '../componentes/Hospital'
-
 import { Loading } from '../componentes/Loading';
+import { especColors } from '../styles/especColors';
+
+import { Hospital, HospitalProps } from '../componentes/Hospital'
 import { Out } from '../utils/Out';
+
 
 type RouteParams = {
   hospitalId: string;
@@ -35,9 +37,9 @@ export function SelectHospital() {
   //Desloga do APP
   const handleLogout = Out();
 
-  function selecionaHospital(hospitalId: string) {
+  function selecionaHospital(hospitalId: string, em_aberto: string) {
     console.log(hospitalId);
-    navigation.navigate('register', { hospitalId, idOcorrencia })
+    navigation.navigate('register', { hospitalId, idOcorrencia, em_aberto })
   }
 
   useEffect(() => {
@@ -97,8 +99,8 @@ export function SelectHospital() {
   }, []);
 
   return (
-    <VStack flex={1} pb={1} bg="#565656">
-      <HStack w="full" justifyContent="space-between" alignItems="center" bg="#FFFAF0" pt={1} pb={1} px={2}>
+    <VStack flex={1} pb={1} bg={especColors.coresPadrao.bg0}>
+      <HStack w="full" justifyContent="space-between" alignItems="center" bg={especColors.coresPadrao.head0} pt={1} pb={1} px={2}>
 
         <Logo />
         <IconButton
@@ -125,7 +127,7 @@ export function SelectHospital() {
             <FlatList
               data={hospitais}
               keyExtractor={item => item.id}
-              renderItem={({ item }) => <Hospital dataHospital={item} onPress={() => selecionaHospital(item.id)} />}
+              renderItem={({ item }) => <Hospital dataHospital={item} onPress={() => selecionaHospital(item.id, item.em_aberto)} />}
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={{ paddingBottom: 50 }}
               ListEmptyComponent={() => (

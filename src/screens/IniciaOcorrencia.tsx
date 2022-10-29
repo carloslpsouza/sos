@@ -60,7 +60,7 @@ export function IniciaOcorrencia() {
       setExibeComponentes([0, 0, 0, 1]);
     }
 
-    atualizaDados(idOcorrencia, ts, 'timeStamp()', 'IniciaOcorrencia')
+    atualizaDados('OCORRENCIA', idOcorrencia, ts, 'timeStamp()', 'IniciaOcorrencia')
       .then((data: boolean) => {
         if (data) {
           setIsLoading(false);
@@ -87,7 +87,7 @@ export function IniciaOcorrencia() {
           dt_retorno_base: dateFormat(data.ts_retorno_base)
         }
         setVetorOcorrencias([dt]);
-        console.log(dt);
+        //console.log(dt);
         setIsLoading(false);
       });
 
@@ -99,8 +99,8 @@ export function IniciaOcorrencia() {
   }, [exibeComponentes]);
 
   return (
-    <VStack flex={1} pb={1} bg="#565656">
-      <HStack w="full" justifyContent="space-between" alignItems="center" bg="#FFFAF0" pt={1} pb={1} px={2}>
+    <VStack w="full" flex={1} pb={1} bg={especColors.coresPadrao.bg0}>
+      <HStack w="full" justifyContent="space-between" alignItems="center" bg={especColors.coresPadrao.head0} pt={1} pb={1}>
         <Logo />
         <IconButton
           icon={<SignOut size={26} color={colors.black} />}
@@ -109,7 +109,7 @@ export function IniciaOcorrencia() {
       </HStack>
       {
         isLoading ? <Loading /> :
-          <VStack flex={1} px={6} alignItems="center">
+          <VStack flex={1} alignItems="center">
             <Heading fontSize={16} mt={5} color="#fff">
               {titulo} {vetorOcorrencias[0] ? vetorOcorrencias[0].vtr.toString().toUpperCase() : <Loading />}
             </Heading>
@@ -125,14 +125,14 @@ export function IniciaOcorrencia() {
                       data={vetorOcorrencias}
                       keyExtractor={item => item.id}
                       renderItem={({ item }) => (
-                        <VStack>
-                          <VStack flex={1}
+                        <VStack flex={1}>
+                          <VStack
+                            shadow={'9'}
                             bg="#FFFAF0"
-                            mt={2}
-                            mb={2}
-                            height={16}
+                            m={2}
+                            px={2}
                             alignItems="center"
-                            justifyContent="space-between"
+                            height={16}
                             rounded="sm"
                             overflow="hidden">
                             <Text color="black" fontSize="md" m={5}>Saída de Base: {item.dt_saida_base}</Text>
@@ -140,15 +140,15 @@ export function IniciaOcorrencia() {
                           {
                             vetorOcorrencias[0].dt_chegada_local != undefined &&
                             <VStack flex={1}
+                              shadow={'9'}
                               bg="#FFFAF0"
-                              mt={2}
-                              mb={2}
+                              m={2}
                               height={16}
                               alignItems="center"
                               justifyContent="space-between"
                               rounded="sm"
                               overflow="hidden">
-                              <Text color="black" fontSize="md" m={5}>Chegada ao local: {item.dt_chegada_local}</Text>
+                              <Text color="black" fontSize="md" my={5}>Chegada ao local: {item.dt_chegada_local}</Text>
                             </VStack>
                           }
                           {
@@ -188,33 +188,35 @@ export function IniciaOcorrencia() {
                     mb={4}
                   />
                 }
-                
+
               </ScrollView>
 
             </KeyboardAvoidingView>
-            {
-              exibeComponentes[0] == 1 &&
-              <Button title='Saída da Base' mb={5} w={'full'}
-                onPress={() => timeStamp({ 'ts_saida_base': firestore.FieldValue.serverTimestamp() }, 0)}
-              />
-            }{
-              exibeComponentes[1] == 1 &&
-              <Button title='Chegada ao local' mb={5} w={'full'}
-                onPress={() => timeStamp({ 'ts_chegada_local': firestore.FieldValue.serverTimestamp() }, 1)}
-              />
-            }
-            {
-              exibeComponentes[2] == 1 &&
-              <Button title='Grava ocorrência' mb={5} w={'full'}
-                onPress={() => timeStamp({ 'ocorrencia': relato }, 2)}
-              />
-            }
-            {
-              exibeComponentes[3] == 1 &&
-              <Button title='Incluir Vitimas' mb={5} w={'full'}
-                onPress={()=>{navegarIncluiVitimas(idOcorrencia)}}
-              />
-            }
+            <VStack px={5} w={'full'}>
+              {
+                exibeComponentes[0] == 1 &&
+                <Button shadow={'9'} title='Saída da Base' mb={5} w={'full'}
+                  onPress={() => timeStamp({ 'ts_saida_base': firestore.FieldValue.serverTimestamp() }, 0)}
+                />
+              }{
+                exibeComponentes[1] == 1 &&
+                <Button shadow={'9'} title='Chegada ao local' mb={5} w={'full'}
+                  onPress={() => timeStamp({ 'ts_chegada_local': firestore.FieldValue.serverTimestamp() }, 1)}
+                />
+              }
+              {
+                exibeComponentes[2] == 1 &&
+                <Button shadow={'9'} title='Grava ocorrência' mb={5} w={'full'}
+                  onPress={() => timeStamp({ 'ocorrencia': relato }, 2)}
+                />
+              }
+              {
+                exibeComponentes[3] == 1 &&
+                <Button shadow={'9'} title='Incluir Vitimas' mb={5} w={'full'}
+                  onPress={() => { navegarIncluiVitimas(idOcorrencia) }}
+                />
+              }
+            </VStack>
           </VStack>
       }
     </VStack>
